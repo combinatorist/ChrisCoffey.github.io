@@ -9,7 +9,13 @@
 <meta name="description" content="Describe this nonsense.">
 <meta name="keywords" content="Jekyll, theme, themes, responsive, blog, modern">
 
+<!-- Twitter Cards -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="/images/abstract-1.jpg">
 
+<meta name="twitter:title" content="Latest Posts">
+<meta name="twitter:description" content="Describe this nonsense.">
+<meta name="twitter:creator" content="@https://twitter.com/_chriscoffey">
 
 <!-- Open Graph -->
 <meta property="og:locale" content="en_US">
@@ -25,7 +31,7 @@
 
 <link rel="canonical" href="/">
 <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Fun With Code Feed">
-<link rel="author" href="https://google.com/+yourid?rel=author">
+
 
 <!-- http://t.co/dKP3o1e -->
 <meta name="HandheldFriendly" content="True">
@@ -71,7 +77,7 @@
 			<a href="#">About</a>
 			<ul class="dl-submenu">
 				<li>
-					<img src="/images/avatar.jpg" alt="Chris Coffey photo" class="author-photo">
+					<img src="/images/lambda.jpeg" alt="Chris Coffey photo" class="author-photo">
 					<h4>Chris Coffey</h4>
 					<p>A programmer with a passion for functional programming and distriuted systems. I also love rock climbing & trying new food.</p>
 				</li>
@@ -79,14 +85,20 @@
 				<li>
 					<a href="mailto:Christopher.m.Coffey@gmail.com"><i class="fa fa-envelope"></i> Email</a>
 				</li>
-				
-				
 				<li>
-					<a href="https://google.com/+yourid"><i class="fa fa-google-plus"></i> Google+</a>
+					<a href="http://twitter.com/https://twitter.com/_chriscoffey"><i class="fa fa-twitter"></i> Twitter</a>
 				</li>
 				
 				
-				
+				<li>
+					<a href="http://linkedin.com/in/https://www.linkedin.com/profile/view?id=29706559&trk=nav_responsive_tab_profile_pic"><i class="fa fa-linkedin"></i> LinkedIn</a>
+				</li>
+				<li>
+					<a href="http://github.com/https://github.com/ChrisCoffey"><i class="fa fa-github"></i> GitHub</a>
+				</li>
+				<li>
+					<a href="http://stackoverflow.com/users/941243/chris"><i class="fa fa-stack-exchange"></i> Stackexchange</a>
+				</li>
 				
 				
 				
@@ -104,11 +116,6 @@
 	        
 	    
 	    <li><a href="/theme-setup/" >Theme Setup</a></li>
-	  
-	    
-	        
-	        
-	    <li><a href="http://mademistakes.com" target="_blank">External Link</a></li>
 	  
 	</ul><!-- /.dl-menu -->
 </nav><!-- /.dl-menuwrapper -->
@@ -131,6 +138,72 @@
 
 <div id="main" role="main">
   
+<article class="hentry">
+  <header>
+    <div class="entry-meta">
+      <span class="entry-date date published updated"><time datetime="2014-11-28T18:25:59-05:00"><a href="/math/beta-eta-and-lambda/">November 28, 2014</a></time></span><span class="author vcard"><span class="fn"><a href="/about/" title="About Chris Coffey">Chris Coffey</a></span></span>
+      
+      <span class="entry-reading-time pull-right">
+        <i class="fa fa-clock-o"></i>
+        
+        Reading time ~4 minutes
+      </span><!-- /.entry-reading-time -->
+      
+    </div><!-- /.entry-meta -->
+    
+      <h1 class="entry-title"><a href="/math/beta-eta-and-lambda/" rel="bookmark" title="Lambda Calculus For The Government Major" itemprop="url">Lambda Calculus For The Government Major</a></h1>
+    
+  </header>
+  <div class="entry-content">
+    <p>Six months ago I decided to check out my first Haskell meetup at Akami’s Cambridge office. Seeing how everyone keeps singing Haskell’s praises and the meetup was only a block away I was locked in. After helping myself to the obligatory slice of pizza &amp; bottle of water I sat down and cracked open my laptop, ready to take some notes &amp; learn me some Haskell. The first talk was simple &amp; understandable enough; a neuroscience PHD student had used Haskell to analyze his lab results &amp; found the software transactional memory feature made concurrency easy for him. 
+Between talks I congratulated myself for following his examples in such a mysterious language &amp; even added <em>What’s so confusing about this</em> into my notes. The second talk flew way over my head, rapidly diving through Lambda Calculus (what’s that??) and moving into Inference Rules &amp; Type Systems. Needless to say this talk left me reeling but motivated to learn what all of those Greek letters actually mean. The following post attempts to explain this to a liberal arts major like myself.</p>
+
+<h3 id="lambda--calculus">Lambda (λ) Calculus</h3>
+
+<p>Lambda Calculus is really little more than 8th grade algebra. It is based on the concepts of <strong>function abstraction</strong> - using variables to represent functions - and <strong>function application</strong> - assigning variable names to particular values. So while these concepts are very simple on the surface they are incredibly powerful and versatile. In fact, you can represent virtually any construct from any programming language as a lambda expression, which means any language could be represented purely via lambda expressions.</p>
+
+<h3 id="function-abstraction">Function Abstraction</h3>
+
+<p>If you’re reading this then odds are you’re a programmer, have a passing interest in programming, or a friend of mine I conned into reading this. Regardless of your background, you probably remember learning in Pre-Algebra that <em>2x + 1 = y</em> plots a straight line for any value of <em>x</em> and <em>y</em>. In that little example <em>x</em> &amp;  <em>y</em> are data variables that abstract away the x &amp; y coordinates for an arbitrary point on the line. Function abstraction is what happens when we say <em>f(x)=2x +1</em>, so the equation for a line becomes <em>f(x)=y</em>. This abstraction has removed the concrete formula &amp; provided a name in its place. This is the backbone of higher-order functions.</p>
+
+<h3 id="function-application">Function Application</h3>
+
+<p>Continuing with the example from above, <em>f(x)=y</em> gives us a lovely representation of our line, but ultimately we’re going to want to plot the line &amp; to do that we’ll need to transform our formula into a series of (x,y) coordinates. The act of “specializing” a particular formula or <em>expression</em> by providing concrete values (in this case 2 _ +1) allows for eventual function evaluation. As you can see, abstraction &amp; application work hand in hand.</p>
+
+<h3 id="expressions">λ Expressions</h3>
+
+<p>A λ expression is one of three things: a variable name identifying function abstraction, a non-abstracted function, or the application of a function. The context-free grammar would be:</p>
+
+<pre><code>Expression = Name | Function | Application
+Function = λName.Body
+Body = Expression
+Application = (Function Argument)
+</code></pre>
+
+<p>For example <em>λa.a λx.λy.y</em> is a function that sets a variable <em>a</em> equal to the function <em>λx.λy.y</em>, which you can tell reduces to <em>y</em>. So the example statement reduces to <em>y</em>.</p>
+
+<p>When evaluating a λ expression there are two possible approaches, <strong>applicative order</strong> and <strong>normal order</strong>. Applicative order means the parameter is evaluated <em>before</em> being passed into the function, while normal order means the parameter is evaluated <em>after</em> being passed in. </p>
+
+<p>At this point you’re probably thinking “great, so I can write long convoluted λ expressions. There must be a cleaner way”. Thankfully, there is!</p>
+
+<h3 id="beta--reductions">Beta (β) Reductions</h3>
+
+<p>β reductions is the formal name for replacing a particular λ function with a name. So, the β reduction of <em>λa.a</em> could be <em>identity</em>, since <em>λa.a</em> is the identity function in λ calculus. So really all we’ve done is take the concept of function abstraction discussed above &amp; given it a fancy name &amp; a Greek letter. Conceptually, this is the exact same as saying <em>f(a) = a</em>.</p>
+
+<h3 id="alpha--conversions">Alpha (α) Conversions</h3>
+
+<p>Now that we have the power to introduce abstraction at arbitrary places in our λ expressions, you’re probably concerned about naming collisions. After all, I could easily introduce a free variable with the same name as a bound variable, so how can I tell them apart? Thankfully α conversions enforce consistent renaming across all free instances of  a variable. This is a complex name for the incredibly simple concept of choosing unique names for variables to avoid confusion.</p>
+
+<h3 id="eta--reductions">Eta (η) Reductions</h3>
+
+<p>η reductions simplify an expression by removing unnecessary bound variables from the expression for instance, a statement *λa.(expr a) * will reduce to *expr * via an η reduction. This process strips out unnecessary variables from a λ expression to clarify the meaning.</p>
+
+<p>In no way have I attempted to provide a comprehensive overview of λ calculus, but I do hope this gives people enough information to prevent them from being completely lost whenever these terms pop up in conversation. Thanks for reading and please contact me with any questions or corrections.</p>
+
+
+  </div><!-- /.entry-content -->
+</article><!-- /.hentry -->
+
 <article class="hentry">
   <header>
     <div class="entry-meta">
@@ -369,80 +442,6 @@
 <p>Occupy et selvage squid, pug brunch blog nesciunt hashtag mumblecore skateboard yr kogi. Ugh small batch swag four loko. Fap post-ironic qui tote bag farm-to-table american apparel scenester keffiyeh vero, swag non pour-over gentrify authentic pitchfork. Schlitz scenester lo-fi voluptate, tote bag irony bicycle rights pariatur vero Vice freegan wayfarers exercitation nisi shoreditch. Chambray tofu vero sed. Street art swag literally leggings, Cosby sweater mixtape PBR lomo Banksy non in pitchfork ennui McSweeney’s selfies. Odd Future Banksy non authentic.</p>
 
 <p>Aliquip enim artisan dolor post-ironic. Pug tote bag Marfa, deserunt pour-over Portland wolf eu odio intelligentsia american apparel ugh ea. Sunt viral et, 3 wolf moon gastropub pug id. Id fashion axe est typewriter, mlkshk Portland art party aute brunch. Sint pork belly Cosby sweater, deep v mumblecore kitsch american apparel. Try-hard direct trade tumblr sint skateboard. Adipisicing bitters excepteur biodiesel, pickled gastropub aute veniam.</p>
-
-  </div><!-- /.entry-content -->
-</article><!-- /.hentry -->
-
-<article class="hentry">
-  <header>
-    <div class="entry-meta">
-      <span class="entry-date date published updated"><time datetime="2013-05-22T00:00:00-04:00"><a href="/sample-post-images/">May 22, 2013</a></time></span><span class="author vcard"><span class="fn"><a href="/about/" title="About Chris Coffey">Chris Coffey</a></span></span>
-      
-      <span class="entry-reading-time pull-right">
-        <i class="fa fa-clock-o"></i>
-        
-        Reading time ~1 minute
-      </span><!-- /.entry-reading-time -->
-      
-    </div><!-- /.entry-meta -->
-    
-      <h1 class="entry-title"><a href="/sample-post-images/" rel="bookmark" title="A Post with Images" itemprop="url">A Post with Images</a></h1>
-    
-  </header>
-  <div class="entry-content">
-    <p>Here are some examples of what a post with images might look like. If you want to display two or three images next to each other responsively use <code>figure</code> with the appropriate <code>class</code>. Each instance of <code>figure</code> is auto-numbered and displayed in the caption.</p>
-
-<h2 id="figures-for-images-or-video">Figures (for images or video)</h2>
-
-<h3 id="one-up">One Up</h3>
-
-<figure>
-	<a href="http://farm9.staticflickr.com/8426/7758832526_cc8f681e48_b.jpg"><img src="http://farm9.staticflickr.com/8426/7758832526_cc8f681e48_c.jpg" alt="" /></a>
-	<figcaption><a href="http://www.flickr.com/photos/80901381@N04/7758832526/" title="Morning Fog Emerging From Trees by A Guy Taking Pictures, on Flickr">Morning Fog Emerging From Trees by A Guy Taking Pictures, on Flickr</a>.</figcaption>
-</figure>
-
-<h3 id="two-up">Two Up</h3>
-
-<p>Apply the <code>half</code> class like so to display two images side by side that share the same caption.</p>
-
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;figure</span> <span class="na">class=</span><span class="s">&quot;half&quot;</span><span class="nt">&gt;</span>
-	<span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">&quot;/images/image-filename-1.jpg&quot;</span> <span class="na">alt=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
-	<span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">&quot;/images/image-filename-2.jpg&quot;</span> <span class="na">alt=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
-	<span class="nt">&lt;figcaption&gt;</span>Caption describing these two images.<span class="nt">&lt;/figcaption&gt;</span>
-<span class="nt">&lt;/figure&gt;</span></code></pre></div>
-
-<p>And you’ll get something that looks like this:</p>
-
-<figure class="half">
-	<a href="http://placehold.it/1200x600.jpg"><img src="http://placehold.it/600x300.jpg" alt="" /></a>
-	<a href="http://placehold.it/1200x600.jpg"><img src="http://placehold.it/600x300.jpg" alt="" /></a>
-	<img src="http://placehold.it/600x300.jpg" alt="" />
-	<img src="http://placehold.it/600x300.jpg" alt="" />
-	<figcaption>Two images.</figcaption>
-</figure>
-
-<h3 id="three-up">Three Up</h3>
-
-<p>Apply the <code>third</code> class like so to display three images side by side that share the same caption.</p>
-
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;figure</span> <span class="na">class=</span><span class="s">&quot;third&quot;</span><span class="nt">&gt;</span>
-	<span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;http://placehold.it/1200x600.jpg&quot;</span><span class="nt">&gt;&lt;img</span> <span class="na">src=</span><span class="s">&quot;http://placehold.it/600x300.jpg&quot;</span> <span class="na">alt=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;&lt;/a&gt;</span>
-	<span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;http://placehold.it/1200x600.jpg&quot;</span><span class="nt">&gt;&lt;img</span> <span class="na">src=</span><span class="s">&quot;http://placehold.it/600x300.jpg&quot;</span> <span class="na">alt=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;&lt;/a&gt;</span>
-	<span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;http://placehold.it/1200x600.jpg&quot;</span><span class="nt">&gt;&lt;img</span> <span class="na">src=</span><span class="s">&quot;http://placehold.it/600x300.jpg&quot;</span> <span class="na">alt=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;&lt;/a&gt;</span>
-	<span class="nt">&lt;figcaption&gt;</span>Caption describing these three images.<span class="nt">&lt;/figcaption&gt;</span>
-<span class="nt">&lt;/figure&gt;</span></code></pre></div>
-
-<p>And you’ll get something that looks like this:</p>
-
-<figure class="third">
-	<a href="http://placehold.it/1200x600.jpg"><img src="http://placehold.it/600x300.jpg" alt="" /></a>
-	<a href="http://placehold.it/1200x600.jpg"><img src="http://placehold.it/600x300.jpg" alt="" /></a>
-	<a href="http://placehold.it/1200x600.jpg"><img src="http://placehold.it/600x300.jpg" alt="" /></a>
-	<a href="http://placehold.it/1200x600.jpg"><img src="http://placehold.it/600x300.jpg" alt="" /></a>
-	<a href="http://placehold.it/1200x600.jpg"><img src="http://placehold.it/600x300.jpg" alt="" /></a>
-	<a href="http://placehold.it/1200x600.jpg"><img src="http://placehold.it/600x300.jpg" alt="" /></a>
-	<figcaption>Three images.</figcaption>
-</figure>
 
   </div><!-- /.entry-content -->
 </article><!-- /.hentry -->
