@@ -27,7 +27,7 @@ Continuing with the example from above, *f(x)=y* gives us a lovely representatio
 
 ### λ Expressions
 
-A λ expression is one of three things: a variable name identifying function abstraction, a non-abstracted function, or the application of a function. The context-free grammar would be:
+A λ expression is one of three things: a variable name identifying function abstraction, a non-abstracted function, or the application of a function. The BNF grammar would be:
 
 	Expression = Name | Function | Application
 	Function = λName.Body
