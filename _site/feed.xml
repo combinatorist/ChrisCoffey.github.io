@@ -4,13 +4,81 @@
 <generator uri="https://github.com/mojombo/jekyll">Jekyll</generator>
 <link rel="self" type="application/atom+xml" href="/feed.xml" />
 <link rel="alternate" type="text/html" href="" />
-<updated>2014-12-15T21:58:56-05:00</updated>
+<updated>2014-12-17T22:39:05-05:00</updated>
 <id>/</id>
 <author>
   <name>Chris Coffey</name>
   <uri>/</uri>
   <email>Christopher.m.Coffey@gmail.com</email>
 </author>
+
+
+<entry>
+  <title type="html"><![CDATA[Lambda Calculus: What's It Good For?]]></title>
+ <link rel="alternate" type="text/html" href="/math/lambda-calculus-whats-it-good-for/" />
+  <id>/math/lambda-calculus-whats-it-good-for</id>
+  <published>2014-12-17T19:50:10-05:00</published>
+  <updated>2014-12-17T19:50:10-05:00</updated>
+  <author>
+    <name>Chris Coffey</name>
+    <uri></uri>
+    <email>Christopher.m.Coffey@gmail.com</email>
+  </author>
+  <content type="html">&lt;p&gt;“What’s the point of λ Calculus?”
+	- Matt&lt;/p&gt;
+
+&lt;p&gt;I started this blog off with &lt;a href=&quot;http://chriscoffey.github.io/math/beta-eta-and-lambda/&quot;&gt;Lambda Calculus for Government Majors&lt;/a&gt; which covered the basic concepts &amp;amp; definitions of lambda calculus. But honestly, knowing what λ means doesn’t really get you anywhere. My colleague Matt pointed this out after reading the piece, and he’s right. So what can you do with λ calculus? I mean really, what’s the point of this fancy algebra? Hopefully the following article explains why people get so excited about this stuff.&lt;/p&gt;
+
+&lt;h3 id=&quot;refresher&quot;&gt;Refresher&lt;/h3&gt;
+
+&lt;p&gt;λa.a  =&amp;gt;  λ indicates this is a lambda expression/function
+β reduction =&amp;gt; replace a given λ expression with a common name
+α conversion =&amp;gt; create unique names for each variable to prevent collisions
+η reduction =&amp;gt; strip out unnecessary bound variables&lt;/p&gt;
+
+&lt;p&gt;For more info on these just take a peek back at my earlier post.&lt;/p&gt;
+
+&lt;h3 id=&quot;addition&quot;&gt;Addition&lt;/h3&gt;
+
+&lt;p&gt;λ calculus is simple. So simple that it has no concept of numbers, addition, or anything else. This poses a bit of a problem if I’m trying to illustrate using λ for addition. I guess we’ll just start at the beginning and define the natural numbers.&lt;/p&gt;
+
+&lt;p&gt;We know that for all natural numbers  &lt;em&gt;x&lt;/em&gt; &amp;gt;= 0 that &lt;em&gt;x&lt;/em&gt; + 1 is also a natural number. This means the notation we’re all use to actually use for, say 5, is equivalent to 0+1+1+1+1+1. I’ll use Church encoding (named after Alonzo Church, the inventor of λ calculus) to encode this property into valid λ functions.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nv&quot;&gt;zero&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; λa.λn.n
+	&lt;span class=&quot;nv&quot;&gt;one&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; λa.λn.a n
+	&lt;span class=&quot;nv&quot;&gt;two&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; λa.λn.a &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;a n&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;nv&quot;&gt;three&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; λa.λn.a &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;a &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;a  n&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+	....&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;What’s really interesting about these numbers and pretty much every other λ expression you’ll see is that it’s a higher order function, or a function that takes another function. Those lambda expressions will grow pretty large pretty quickly, so I’ll just be using normal numbers instead (developers are lazy after all). &lt;/p&gt;
+
+&lt;p&gt;Are we ready for addition yet? We know how to create numbers, so what else do we need? It turns out not much:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nv&quot;&gt;add&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; λx.λy.λa.λn.m a &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;y a x&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;So now that I have a whole bunch of λ’s &amp;amp; some parens, what’s actually going on here? Let’s use 1 + 1 as an example:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;add&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt; one one&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;((&lt;/span&gt;λx.λy.λa.λn.x a &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;y a n&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; λc.λd.c d &lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; λ.e.λf.e &lt;span class=&quot;nv&quot;&gt;f&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; I performed an α conversion on the line above to avoid shadowing on &lt;span class=&quot;s1&quot;&gt;&amp;#39;one&amp;#39;&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;((&lt;/span&gt;λc.λd.c d&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; a &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;y a n&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt; λe.λf.e f
+	&lt;span class=&quot;o&quot;&gt;((&lt;/span&gt;λc.λd.c d&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; a &lt;span class=&quot;o&quot;&gt;((&lt;/span&gt;λ.e.λf.e f&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; a n&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;
+	c &lt;span class=&quot;o&quot;&gt;((&lt;/span&gt;λe.λf.e f&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; a n&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+	a &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;a n&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Who knew something as simple as 1 + 1 would expand into that! Thankfully this is the equivalent of doing binary arithmetic in assembler, i.e. something you won’t need to do again. On the positive side this illustrates the power of function expansion using higher order functions. It takes a while to work through, and I’d strongly recommend working through the same example using 1 + 2 since you already know the answer is λa.λn.a (a (a n)).&lt;/p&gt;
+
+&lt;h3 id=&quot;what-use-is-this&quot;&gt;What Use Is This?&lt;/h3&gt;
+&lt;p&gt;One word. Compilers. When you step back and think about it, λ Calculus is actually Turing Complete (hopefully that’s more apparent after our foray into Church encoding), so it’s a good fit for trying things out quickly. Anything that can compile down to λ Calculus (any Turing complete language) can then be translated up into another language for execution. So whenever someone says “every language is the same” you can show off your knowledge of λ calculus &amp;amp; isomorphisms between languages!&lt;/p&gt;
+
+&lt;p&gt;Hopefully this helped, but if you want to learn more check out these resources:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://en.wikipedia.org/wiki/Lambda_calculus&quot;&gt;Wikipedia&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://matt.might.net/articles/compiling-up-to-lambda-calculus/&quot;&gt;Compiling Up to Lambda Calculus&lt;/a&gt;&lt;/p&gt;
+
+
+  &lt;p&gt;&lt;a href=&quot;/math/lambda-calculus-whats-it-good-for/&quot;&gt;Lambda Calculus: What's It Good For?&lt;/a&gt; was originally published by Chris Coffey at &lt;a href=&quot;&quot;&gt;Fun With Code&lt;/a&gt; on December 17, 2014.&lt;/p&gt;</content>
+</entry>
 
 
 <entry>
@@ -237,7 +305,7 @@ Between talks I congratulated myself for following his examples in such a myster
 
 &lt;h3 id=&quot;expressions&quot;&gt;λ Expressions&lt;/h3&gt;
 
-&lt;p&gt;A λ expression is one of three things: a variable name identifying function abstraction, a non-abstracted function, or the application of a function. The context-free grammar would be:&lt;/p&gt;
+&lt;p&gt;A λ expression is one of three things: a variable name identifying function abstraction, a non-abstracted function, or the application of a function. The BNF grammar would be:&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;Expression = Name | Function | Application
 Function = λName.Body
