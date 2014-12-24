@@ -31,7 +31,7 @@ For more info on these just take a peek back at my earlier post.
 
 ### Addition
 
-Before getting into what you can do with λ calculus, I should probably show an example of how it actually works once it's been expanded. Expanding a λ expression is essentially replacing bound variables with provided arguments. This can end up throwing a ton of λ and parens at you, but it helps clarify the relationship between a reduced funtion & any data passed in. To start with, I'll take advantage of the fact that λ calculus is simple. So simple that it has no concept of numbers, addition, or anything else. This poses a bit of a problem if I'm trying to illustrate using λ for addition. I guess we'll just start at the beginning and define the natural numbers.
+Before getting into what you can do with λ calculus, I should probably show an example of how it actually works once it's been expanded. Expanding a λ expression is essentially replacing bound variables with provided arguments. This can end up throwing a ton of λ and parens at you, but it helps clarify the relationship between a reduced function & any data passed in. To start with, I'll take advantage of the fact that λ calculus is simple. So simple that it has no concept of numbers, addition, or anything else. This poses a bit of a problem if I'm trying to illustrate using λ for addition. I guess we'll just start at the beginning and define the natural numbers.
 
 We know that for all natural numbers  *x* >= 0 that *x* + 1 is also a natural number. This means the notation we're all use to actually use for, say 5, is equivalent to 0+1+1+1+1+1. I'll use Church encoding (named after Alonzo Church, the inventor of λ calculus) to encode this property into valid λ functions.
 
