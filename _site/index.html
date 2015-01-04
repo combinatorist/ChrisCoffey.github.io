@@ -139,6 +139,58 @@
 <article class="hentry">
   <header>
     <div class="entry-meta">
+      <span class="entry-date date published updated"><time datetime="2015-01-04T17:15:01-05:00"><a href="/math/primitive-power/">January 04, 2015</a></time></span><span class="author vcard"><span class="fn"><a href="/about/" title="About Chris Coffey">Chris Coffey</a></span></span>
+      
+      <span class="entry-reading-time pull-right">
+        <i class="fa fa-clock-o"></i>
+        
+        Reading time ~3 minutes
+      </span><!-- /.entry-reading-time -->
+      
+    </div><!-- /.entry-meta -->
+    
+      <h1 class="entry-title"><a href="/math/primitive-power/" rel="bookmark" title="Primitive Power" itemprop="url">Primitive Power</a></h1>
+    
+  </header>
+  <div class="entry-content">
+    <p>Flying back from a nice 2 week vacation in Texas &amp; I had a chance to think about primative operators. Specifically in this post I’ll be exploring what a primative opeartor actually is and whether there’s such a thing as “more powerful” primatives.</p>
+
+<p>To get started I’ll be working with <strong>map</strong>a function we all hold near and dear. <strong>Map</strong>’s signature takes a value of some type <strong>A</strong> and a function <strong>A =&gt; B</strong>. So the full signature would be:</p>
+
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">def</span> <span class="n">map</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">B</span><span class="o">](</span><span class="n">x</span><span class="k">:</span> <span class="kt">A</span><span class="o">)(</span><span class="n">f</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="n">B</span><span class="o">)</span> <span class="k">:</span> <span class="kt">B</span></code></pre></div>
+
+<p>This function has as it’s range and domain all possible morphisms across two types. For instance, based on signature alone <strong>map</strong> can transform an <strong>Int</strong> into a <strong>Dinosaur</strong> via some magical function <strong>f(i: Int)</strong>. However, what it cannot do is transform an <strong>Int</strong> and a <strong>String</strong> into a <strong>Dinosaur</strong>. You could accomplish this via a <strong>Tuple[Int, String]</strong> and an <strong>f(t: (Int, String))</strong> but because you are still acting on a single parameter you’re unable to partially apply <strong>map</strong> to the tuple. Really this means we’ve been forced into evaluating all or none of the parameters with no ability to choose between them. That seems like an unnecessary constraint for a morphism.</p>
+
+<p>This suggests there exists some more “powerful” version of <strong>map</strong> that allows us to partially apply across multiple parameters and evaluate them independently. For lack of a better name lets call this <strong>map2</strong>. <strong>Map2</strong> accepts two types of parameters &amp; returns a third, so we know it’s signature looks like this:</p>
+
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">def</span> <span class="n">map2</span><span class="o">[</span><span class="kt">A</span>,<span class="kt">B</span>,<span class="kt">C</span><span class="o">](</span><span class="n">a</span><span class="k">:</span> <span class="kt">A</span><span class="o">,</span> <span class="n">b</span><span class="k">:</span> <span class="kt">B</span><span class="o">)(</span><span class="n">f</span><span class="k">:</span> <span class="o">(</span><span class="kt">A</span><span class="o">,</span> <span class="kt">B</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">C</span><span class="o">)</span><span class="k">:</span> <span class="kt">C</span></code></pre></div>
+
+<p><strong>Map2</strong> is able to handle anything <strong>map</strong> can do by providing a no-op type as <strong>B</strong>’s type argument. For example, here’s <strong>map</strong> implemented via <strong>map2</strong>:</p>
+
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">def</span> <span class="n">map</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">B</span><span class="o">](</span><span class="n">a</span><span class="k">:</span> <span class="kt">A</span><span class="o">)(</span><span class="n">f</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=&gt;</span> <span class="n">B</span><span class="o">)</span><span class="k">:</span> <span class="kt">B</span> <span class="o">=</span> 
+	<span class="n">map2</span><span class="o">(</span><span class="n">a</span><span class="o">,</span> <span class="nc">NoOp</span><span class="o">)((</span><span class="n">x</span><span class="o">,</span> <span class="n">y</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">f</span><span class="o">(</span><span class="n">x</span><span class="o">))</span></code></pre></div>
+
+<p>This on it’s own buys us alot of power because we no longer need to worry about actually applying the computation for the morphism in <strong>map</strong>, instead we can defer it into <strong>map2</strong>. The next question I have about <strong>Map2</strong> is whether we can create a function <strong>Map3</strong> that is again more powerful than <strong>Map2</strong>? Logically it would seem that since <strong>Map2</strong>’s domain and range are strictly supersets of the domain and range for <strong>Map</strong> that it holds <strong>Map2</strong> should be a subset of <strong>Map3</strong>, right?</p>
+
+<p>It turns out this isn’t quite the case on the implemetation level. You can actually implement all other arity mapping functions in terms of <strong>Map2</strong> by using a trick simmilar to have a right fold operates. That is to say via building up a chain of function calls to provide the proper arity. Here’s <strong>Map3</strong>:</p>
+
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">def</span> <span class="n">map3</span><span class="o">[</span><span class="kt">A</span>, <span class="kt">B</span>, <span class="kt">C</span>, <span class="kt">D</span><span class="o">](</span><span class="n">a</span><span class="k">:</span> <span class="kt">A</span><span class="o">,</span> <span class="n">b</span><span class="k">:</span> <span class="kt">B</span><span class="o">,</span> <span class="n">c</span><span class="k">:</span> <span class="kt">C</span><span class="o">)(</span><span class="n">f</span><span class="k">:</span> <span class="o">(</span><span class="kt">A</span><span class="o">,</span> <span class="kt">B</span><span class="o">,</span> <span class="n">C</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">D</span><span class="o">)</span><span class="k">:</span> <span class="kt">D</span> <span class="o">=</span> 
+	<span class="n">map2</span><span class="o">(</span><span class="n">a</span><span class="o">,</span> <span class="n">b</span><span class="o">)((</span><span class="n">x</span><span class="o">,</span> <span class="n">y</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">map2</span><span class="o">(</span><span class="n">c</span><span class="o">,</span> <span class="nc">NoOp</span><span class="o">)(</span><span class="n">f</span><span class="o">(</span><span class="n">a</span><span class="o">,</span> <span class="n">b</span><span class="o">,</span> <span class="n">c</span><span class="o">)))</span></code></pre></div>
+
+<p>This ends up creating a chain of map2 calls that can be composed together as <strong>f • g • …</strong> to generate the full chain. </p>
+
+<p>As I think about it, it is actually possible to use the same approach to construct a similarly deep function call chain for <strong>map</strong>, allowing us to use <strong>map</strong> as the base primative and implement all other arity <strong>map</strong>’s in terms of the base primitive.</p>
+
+<p>With standard Map it’s still impossible to use a single function call to support &gt;1 parameter, where as <strong>map</strong> with arity &gt; 1 inherently supports this</p>
+
+<p>I’ll update this post once I’ve had a chance to do some more research on which of the two functions is actually the base primitive..</p>
+
+  </div><!-- /.entry-content -->
+</article><!-- /.hentry -->
+
+<article class="hentry">
+  <header>
+    <div class="entry-meta">
       <span class="entry-date date published updated"><time datetime="2014-12-23T00:00:00-05:00"><a href="/more-state-machines/">December 23, 2014</a></time></span><span class="author vcard"><span class="fn"><a href="/about/" title="About Chris Coffey">Chris Coffey</a></span></span>
       
       <span class="entry-reading-time pull-right">
@@ -165,10 +217,10 @@
 
 <p>In the first option, there’s a big advantage in keeping your conceptual model clean. This makes it easier for others to consume. Unfortunately, as soon as you introduce guarded transitions this conceptual “clarity” actually turns into a muddy pool of non-determinism. This is because as soon as the possibility of failure is introduced you have the possibility that a transition from <strong>A</strong> -&gt; <strong>B</strong> is no longer a DFA, but an NDFA (Non-Deterministic Finite Automata) because if the transition fails, then you’ll actually wind up back in <strong>A</strong> (or a failure state), otherwise the machine transitions to <strong>B</strong>. As you can imagine, this is more difficult to reason about. In a Scala implementation this also means you don’t know that the transition was requested in the event of a complete failure.</p>
 
-<p>The alternative approach using an intermediate state means your diagram becomes much more complicated, with each intermediate state that may fail protected by a guard state. However daunting this pattern may seem initially, it’s actualy incredibly easy to reason about so long as developers all understand the pattern (just like any other design pattern). The major advantages here are that the FSM is always a DFA, i.e. you always know exactly the state you’re in. If there is input that triggers a guarded transition it immediately transitions into the guard state, then returns. Yup, this means that you’re always transitioning immediately then handling the forward/backward transition in a callback. The only allowed transitions from <strong>B’</strong> should be to <strong>A</strong> on failure or <strong>B</strong> on success. </p>
+<p>The alternative approach using an intermediate state means your diagram becomes much more complicated, with each intermediate state that may fail protected by a guard state. However daunting this pattern may seem initially, it’s actually incredibly easy to reason about so long as developers all understand the pattern (just like any other design pattern). The major advantages here are that the FSM is always a DFA, i.e. you always know exactly the state you’re in. If there is input that triggers a guarded transition it immediately transitions into the guard state, then returns. Yup, this means that you’re always transitioning immediately then handling the forward/backward transition in a callback. The only allowed transitions from <strong>B’</strong> should be to <strong>A</strong> on failure or <strong>B</strong> on success. </p>
 
 <h5 id="a-simple-scala-example">A Simple Scala Example</h5>
-<p>Bank accounts. Most of us have them (some prefer a shoebox under the mattress though), and all of us have probably either used one as an example or read examples using them before so the mechanics should be pretty straight forward. </p>
+<p>Bank accounts. Most of us have them (some prefer a shoe-box under the mattress though), and all of us have probably either used one as an example or read examples using them before so the mechanics should be pretty straight forward. </p>
 
 <p>To start with, lets think about what we’ll need to model a DFA. To start with, we need the transition table and a domain to work with: </p>
 
@@ -203,12 +255,12 @@
 
 <p>There’s pretty much nothing actually going on here, but I’ve defined the basic structures we’ll need for working with our bank account. We can attempt to either Credit or Debit the account, which will result in a credit or debit to the account. If we try to take too much money out of the account it triggers an overdraw, which needs to ask a hypothetical overdraw controller if we’re allowed to do this. Given that we don’t want to immediately allow the overdraw, hand out the money, then come back and decide “oops, probably shouldn’t have done that”, we’ll need some intermediate state between Open &amp; Overdrawn.</p>
 
-<p>To that end I’ve created a simple wrapper state, <em>Guarded[T]</em> which wraps any other state and the inital state we were in. Pretty easy to rollback when you’re carrying the intitial state around w/ you, isn’t it! Okay, lets look at some code:</p>
+<p>To that end I’ve created a simple wrapper state, <em>Guarded[T]</em> which wraps any other state and the initial state we were in. Pretty easy to rollback when you’re carrying the initial state around w/ you, isn’t it! Okay, lets look at some code:</p>
 
 <div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">case</span> <span class="k">class</span> <span class="nc">Guarded</span><span class="o">[</span><span class="kt">A</span> <span class="k">&lt;:</span> <span class="kt">AccountState</span>, <span class="kt">B</span> <span class="k">&lt;:</span> <span class="kt">AccountState</span><span class="o">](</span><span class="n">s</span><span class="k">:</span> <span class="kt">A</span><span class="o">,</span> <span class="n">prev</span><span class="k">:</span> <span class="kt">B</span><span class="o">)</span>
 
 <span class="cm">/**</span>
-<span class="cm"> * A simple case class representing a bank acocunt.</span>
+<span class="cm"> * A simple case class representing a bank account.</span>
 <span class="cm"> *</span>
 <span class="cm"> */</span>
 <span class="k">case</span> <span class="k">class</span> <span class="nc">BankAccount</span><span class="o">(</span><span class="n">balance</span><span class="k">:</span> <span class="kt">Int</span><span class="o">,</span> <span class="n">state</span><span class="k">:</span> <span class="kt">AccountState</span><span class="o">)</span>
@@ -243,14 +295,14 @@
 
 <span class="o">}</span></code></pre></div>
 
-<p>I tend to have a bad habbit of throwing alot of code up before speaking to it, and this is no exception. To start with, we have the <em>Guarded[A,B]</em> type described above, followed by a trivial context (state carrier) and the transition table. Most of the transitions are unrelated to what we’re actually concerned with here, but they help to add some ambiance (or I got distracted and wrote them durng this flight…). </p>
+<p>I tend to have a bad habit of throwing a lot of code up before speaking to it, and this is no exception. To start with, we have the <em>Guarded[A,B]</em> type described above, followed by a trivial context (state carrier) and the transition table. Most of the transitions are unrelated to what we’re actually concerned with here, but they help to add some ambiance (or I got distracted and wrote them during this flight…). </p>
 
-<p>The really intersting piece and the entire reason for this post is the use of Guarded. You’ll notice halfway through the transition table that attempts to overdraw don’t result in any change to the account balance and they move the state to Guarded. This pattern allows a quick and easy rollback in the event of a failed overdraw, or a successful transition to Overdrawn with the new amount computed. </p>
+<p>The really interesting piece and the entire reason for this post is the use of Guarded. You’ll notice halfway through the transition table that attempts to overdraw don’t result in any change to the account balance and they move the state to Guarded. This pattern allows a quick and easy rollback in the event of a failed overdraw, or a successful transition to Overdrawn with the new amount computed. </p>
 
 <p>What does this buy us? I’ll explain.</p>
 
 <h5 id="why-use-the-guarded-transition-pattern">Why use the <em>Guarded Transition</em> Pattern?</h5>
-<p>When compared to the alternative of wrapping a possibly failing computation up into a transition, the Guarded pattern has two main advantages. First, it forces a complete separation of concerns between the logic and the DFA model. For instance, a possible impelmentation of this may involv a parent service that orchestrtes actions based on the DFA’s response following a transition. This allows the service to wrap the transition up in a Future, execute it synchronously, or do anything else with it, all unbeknownst to the DFA. Additionaly if events are being persisted real-time w/ something like <a href="link required">Akka Persistence</a> you’ll know exactly what computation was in-progress if the system crashes. Secondly, the guarded transition pattern provides a simple structured error handling &amp; rollback approach for potentially failing transitions. This is especialy important if that transition involves a 3rd party service for something like authentication, lookup, etc…</p>
+<p>When compared to the alternative of wrapping a possibly failing computation up into a transition, the Guarded pattern has two main advantages. First, it forces a complete separation of concerns between the logic and the DFA model. For instance, a possible implementation of this may involve a parent service that orchestrates actions based on the DFA’s response following a transition. This allows the service to wrap the transition up in a Future, execute it synchronously, or do anything else with it, all unbeknown to the DFA. Additionally if events are being persisted real-time w/ something like <a href="link required">Akka Persistence</a> you’ll know exactly what computation was in-progress if the system crashes. Secondly, the guarded transition pattern provides a simple structured error handling &amp; rollback approach for potentially failing transitions. This is especially important if that transition involves a 3rd party service for something like authentication, lookup, etc…</p>
 
 
   </div><!-- /.entry-content -->
@@ -535,72 +587,6 @@
   </div><!-- /.entry-content -->
 </article><!-- /.hentry -->
 
-<article class="hentry">
-  <header>
-    <div class="entry-meta">
-      <span class="entry-date date published updated"><time datetime="2014-11-28T18:25:59-05:00"><a href="/math/beta-eta-and-lambda/">November 28, 2014</a></time></span><span class="author vcard"><span class="fn"><a href="/about/" title="About Chris Coffey">Chris Coffey</a></span></span>
-      
-      <span class="entry-reading-time pull-right">
-        <i class="fa fa-clock-o"></i>
-        
-        Reading time ~4 minutes
-      </span><!-- /.entry-reading-time -->
-      
-    </div><!-- /.entry-meta -->
-    
-      <h1 class="entry-title"><a href="/math/beta-eta-and-lambda/" rel="bookmark" title="Lambda Calculus For The Government Major" itemprop="url">Lambda Calculus For The Government Major</a></h1>
-    
-  </header>
-  <div class="entry-content">
-    <p>Six months ago I decided to check out my first Haskell meetup at Akami’s Cambridge office. Seeing how everyone keeps singing Haskell’s praises and the meetup was only a block away I was locked in. After helping myself to the obligatory slice of pizza &amp; bottle of water I sat down and cracked open my laptop, ready to take some notes &amp; learn me some Haskell. The first talk was simple &amp; understandable enough; a neuroscience PHD student had used Haskell to analyze his lab results &amp; found the software transactional memory feature made concurrency easy for him. 
-Between talks I congratulated myself for following his examples in such a mysterious language &amp; even added <em>What’s so confusing about this</em> into my notes. The second talk flew way over my head, rapidly diving through Lambda Calculus (what’s that??) and moving into Inference Rules &amp; Type Systems. Needless to say this talk left me reeling but motivated to learn what all of those Greek letters actually mean. The following post attempts to explain this to a liberal arts major like myself.</p>
-
-<h3 id="lambda--calculus">Lambda (λ) Calculus</h3>
-
-<p>Lambda Calculus is really little more than 8th grade algebra. It is based on the concepts of <strong>function abstraction</strong> - using variables to represent functions - and <strong>function application</strong> - assigning variable names to particular values. So while these concepts are very simple on the surface they are incredibly powerful and versatile. In fact, you can represent virtually any construct from any programming language as a lambda expression, which means any language could be represented purely via lambda expressions.</p>
-
-<h3 id="function-abstraction">Function Abstraction</h3>
-
-<p>If you’re reading this then odds are you’re a programmer, have a passing interest in programming, or a friend of mine I conned into reading this. Regardless of your background, you probably remember learning in Pre-Algebra that <em>2x + 1 = y</em> plots a straight line for any value of <em>x</em> and <em>y</em>. In that little example <em>x</em> &amp;  <em>y</em> are data variables that abstract away the x &amp; y coordinates for an arbitrary point on the line. Function abstraction is what happens when we say <em>f(x)=2x +1</em>, so the equation for a line becomes <em>f(x)=y</em>. This abstraction has removed the concrete formula &amp; provided a name in its place. This is the backbone of higher-order functions.</p>
-
-<h3 id="function-application">Function Application</h3>
-
-<p>Continuing with the example from above, <em>f(x)=y</em> gives us a lovely representation of our line, but ultimately we’re going to want to plot the line &amp; to do that we’ll need to transform our formula into a series of (x,y) coordinates. The act of “specializing” a particular formula or <em>expression</em> by providing concrete values (in this case 2 _ +1) allows for eventual function evaluation. As you can see, abstraction &amp; application work hand in hand.</p>
-
-<h3 id="expressions">λ Expressions</h3>
-
-<p>A λ expression is one of three things: a variable name identifying function abstraction, a non-abstracted function, or the application of a function. The BNF grammar would be:</p>
-
-<pre><code>Expression = Name | Function | Application
-Function = λName.Body
-Body = Expression
-Application = (Function Argument)
-</code></pre>
-
-<p>For example <em>λa.a λx.λy.y</em> is a function that sets a variable <em>a</em> equal to the function <em>λx.λy.y</em>, which you can tell reduces to <em>y</em>. So the example statement reduces to <em>y</em>.</p>
-
-<p>When evaluating a λ expression there are two possible approaches, <strong>applicative order</strong> and <strong>normal order</strong>. Applicative order means the parameter is evaluated <em>before</em> being passed into the function, while normal order means the parameter is evaluated <em>after</em> being passed in. </p>
-
-<p>At this point you’re probably thinking “great, so I can write long convoluted λ expressions. There must be a cleaner way”. Thankfully, there is!</p>
-
-<h3 id="beta--reductions">Beta (β) Reductions</h3>
-
-<p>β reductions is the formal name for replacing a particular λ function with a name. So, the β reduction of <em>λa.a</em> could be <em>identity</em>, since <em>λa.a</em> is the identity function in λ calculus. So really all we’ve done is take the concept of function abstraction discussed above &amp; given it a fancy name &amp; a Greek letter. Conceptually, this is the exact same as saying <em>f(a) = a</em>.</p>
-
-<h3 id="alpha--conversions">Alpha (α) Conversions</h3>
-
-<p>Now that we have the power to introduce abstraction at arbitrary places in our λ expressions, you’re probably concerned about naming collisions. After all, I could easily introduce a free variable with the same name as a bound variable, so how can I tell them apart? Thankfully α conversions enforce consistent renaming across all free instances of  a variable. This is a complex name for the incredibly simple concept of choosing unique names for variables to avoid confusion.</p>
-
-<h3 id="eta--reductions">Eta (η) Reductions</h3>
-
-<p>η reductions simplify an expression by removing unnecessary bound variables from the expression for instance, a statement *λa.(expr a) * will reduce to *expr * via an η reduction. This process strips out unnecessary variables from a λ expression to clarify the meaning.</p>
-
-<p>In no way have I attempted to provide a comprehensive overview of λ calculus, but I do hope this gives people enough information to prevent them from being completely lost whenever these terms pop up in conversation. Thanks for reading and please contact me with any questions or corrections.</p>
-
-
-  </div><!-- /.entry-content -->
-</article><!-- /.hentry -->
-
 
 <div class="pagination">
   
@@ -613,16 +599,22 @@ Application = (Function Argument)
       
     </li>
     
+      <li>
+        
+          <a href="/page2">2</a>
+        
+      </li>
+    
   </ul>
   
-    Next
+    <a href="/page2" class="btn">Next</a>
   
 </div><!-- /.pagination -->
 </div><!-- /#main -->
 
 <div class="footer-wrapper">
   <footer role="contentinfo">
-    <span>&copy; 2014 Chris Coffey. Powered by <a href="http://jekyllrb.com" rel="nofollow">Jekyll</a> using the <a href="http://mademistakes.com/hpstr/" rel="notfollow">HPSTR Theme</a>.</span>
+    <span>&copy; 2015 Chris Coffey. Powered by <a href="http://jekyllrb.com" rel="nofollow">Jekyll</a> using the <a href="http://mademistakes.com/hpstr/" rel="notfollow">HPSTR Theme</a>.</span>
   </footer>
 </div><!-- /.footer-wrapper -->
 
