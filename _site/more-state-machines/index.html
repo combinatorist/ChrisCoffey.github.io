@@ -1,0 +1,99 @@
+<p>In my last post about state machines I talked about how they can help provide simplifying assumptions for modeling your applications. However, all the simplifying assumptions aren’t very helpful if you can’t actually change your data. In this post I’ll discuss guarded transitions &amp; how to model them in Scala. </p>
+
+<h5 id="the-basics">The Basics</h5>
+<p>A basic state machine, especially the DFA we modeled in the previous post, transitions directly from the current state to the new state upon an input. However, how do we model this if we need to perform a calculation/ operation that may fail during the transition from state <strong>A</strong> -&gt; <strong>B</strong>? The way I see it, you have to options:</p>
+
+<ul>
+  <li>Hide the side effect in the transition and make the transition synchronous.</li>
+  <li>Introduce an intermediate state <strong>B’</strong> representing the intent or attempt to transition from <strong>A</strong> -&gt; <strong>B</strong>. </li>
+</ul>
+
+<p>In the first option, there’s a big advantage in keeping your conceptual model clean. This makes it easier for others to consume. Unfortunately, as soon as you introduce guarded transitions this conceptual “clarity” actually turns into a muddy pool of non-determinism. This is because as soon as the possibility of failure is introduced you have the possibility that a transition from <strong>A</strong> -&gt; <strong>B</strong> is no longer a DFA, but an NDFA (Non-Deterministic Finite Automata) because if the transition fails, then you’ll actually wind up back in <strong>A</strong> (or a failure state), otherwise the machine transitions to <strong>B</strong>. As you can imagine, this is more difficult to reason about. In a Scala implementation this also means you don’t know that the transition was requested in the event of a complete failure.</p>
+
+<p>The alternative approach using an intermediate state means your diagram becomes much more complicated, with each intermediate state that may fail protected by a guard state. However daunting this pattern may seem initially, it’s actually incredibly easy to reason about so long as developers all understand the pattern (just like any other design pattern). The major advantages here are that the FSM is always a DFA, i.e. you always know exactly the state you’re in. If there is input that triggers a guarded transition it immediately transitions into the guard state, then returns. Yup, this means that you’re always transitioning immediately then handling the forward/backward transition in a callback. The only allowed transitions from <strong>B’</strong> should be to <strong>A</strong> on failure or <strong>B</strong> on success. </p>
+
+<h5 id="a-simple-scala-example">A Simple Scala Example</h5>
+<p>Bank accounts. Most of us have them (some prefer a shoe-box under the mattress though), and all of us have probably either used one as an example or read examples using them before so the mechanics should be pretty straight forward. </p>
+
+<p>To start with, lets think about what we’ll need to model a DFA. To start with, we need the transition table and a domain to work with: </p>
+
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">trait</span> <span class="nc">DFAState</span>
+
+<span class="k">trait</span> <span class="nc">Result</span>
+<span class="k">trait</span> <span class="nc">Request</span>
+
+<span class="k">trait</span> <span class="nc">DFA</span><span class="o">[</span><span class="kt">T</span>, <span class="kt">Input</span><span class="o">]</span> <span class="o">{</span>
+	
+	<span class="k">def</span> <span class="n">transition</span><span class="o">(</span><span class="n">in</span><span class="k">:</span> <span class="kt">Input</span><span class="o">)(</span><span class="n">state</span><span class="k">:</span> <span class="kt">T</span><span class="o">)</span><span class="k">:</span> <span class="o">(</span><span class="kt">Result</span><span class="o">,</span> <span class="kt">T</span><span class="o">)</span>
+
+<span class="o">}</span>
+
+<span class="k">trait</span> <span class="nc">TranRequest</span><span class="o">{</span>
+  <span class="k">val</span> <span class="n">amount</span><span class="k">:</span> <span class="kt">Int</span>
+<span class="o">}</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Credited</span><span class="o">(</span><span class="n">amount</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Result</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Debited</span><span class="o">(</span><span class="n">amount</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Result</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">OverdrawApproved</span><span class="o">(</span><span class="n">amount</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Result</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">OverdrawRejected</span><span class="o">(</span><span class="n">amount</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Result</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">ApproveOverdraw</span><span class="o">(</span><span class="n">amount</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Request</span> <span class="k">with</span> <span class="nc">TranRequest</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">RejectOverdraw</span><span class="o">(</span><span class="n">amount</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Result</span> <span class="k">with</span> <span class="nc">TranRequest</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Credit</span><span class="o">(</span><span class="n">amount</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Request</span> <span class="k">with</span> <span class="nc">TranRequest</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Debit</span><span class="o">(</span><span class="n">amount</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Result</span> <span class="k">with</span> <span class="nc">TranRequest</span>
+
+<span class="k">trait</span> <span class="nc">AccountState</span> <span class="k">extends</span> <span class="nc">DFAState</span>
+<span class="k">case</span> <span class="k">object</span> <span class="nc">Open</span> <span class="k">extends</span> <span class="nc">AccountState</span>
+<span class="k">case</span> <span class="k">object</span> <span class="nc">Overdrawn</span> <span class="k">extends</span> <span class="nc">AccountState</span></code></pre></div>
+
+<p>There’s pretty much nothing actually going on here, but I’ve defined the basic structures we’ll need for working with our bank account. We can attempt to either Credit or Debit the account, which will result in a credit or debit to the account. If we try to take too much money out of the account it triggers an overdraw, which needs to ask a hypothetical overdraw controller if we’re allowed to do this. Given that we don’t want to immediately allow the overdraw, hand out the money, then come back and decide “oops, probably shouldn’t have done that”, we’ll need some intermediate state between Open &amp; Overdrawn.</p>
+
+<p>To that end I’ve created a simple wrapper state, <em>Guarded[T]</em> which wraps any other state and the initial state we were in. Pretty easy to rollback when you’re carrying the initial state around w/ you, isn’t it! Okay, lets look at some code:</p>
+
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">case</span> <span class="k">class</span> <span class="nc">Guarded</span><span class="o">[</span><span class="kt">A</span> <span class="k">&lt;:</span> <span class="kt">AccountState</span>, <span class="kt">B</span> <span class="k">&lt;:</span> <span class="kt">AccountState</span><span class="o">](</span><span class="n">s</span><span class="k">:</span> <span class="kt">A</span><span class="o">,</span> <span class="n">prev</span><span class="k">:</span> <span class="kt">B</span><span class="o">)</span>
+
+<span class="cm">/**</span>
+<span class="cm"> * A simple case class representing a bank account.</span>
+<span class="cm"> *</span>
+<span class="cm"> */</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">BankAccount</span><span class="o">(</span><span class="n">balance</span><span class="k">:</span> <span class="kt">Int</span><span class="o">,</span> <span class="n">state</span><span class="k">:</span> <span class="kt">AccountState</span><span class="o">)</span>
+
+<span class="k">object</span> <span class="nc">BankAccount</span> <span class="k">extends</span> <span class="nc">DFA</span><span class="o">[</span><span class="kt">BankAccoun</span>, <span class="kt">TransactionRequest</span><span class="o">]{</span>
+
+	<span class="k">def</span> <span class="n">transition</span><span class="o">(</span><span class="n">in</span><span class="k">:</span> <span class="kt">Input</span><span class="o">)(</span><span class="n">state</span><span class="k">:</span> <span class="kt">T</span><span class="o">)</span><span class="k">:</span> <span class="o">(</span><span class="kt">Result</span><span class="o">,</span> <span class="kt">T</span><span class="o">)={</span>
+ 		<span class="n">state</span><span class="o">.</span><span class="n">state</span> <span class="k">match</span><span class="o">{</span>
+      <span class="k">case</span> <span class="nc">Open</span> <span class="k">=&gt;</span> <span class="o">{</span>
+      <span class="n">in</span> <span class="k">match</span> <span class="o">{</span>
+        <span class="k">case</span> <span class="nc">Credit</span><span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="nc">Credited</span><span class="o">(</span><span class="n">x</span><span class="o">),</span> <span class="nc">BankAccount</span><span class="o">(</span><span class="n">balancePostTransaction</span><span class="o">(</span><span class="n">state</span><span class="o">,</span> <span class="n">in</span><span class="o">),</span> <span class="nc">Open</span><span class="o">))</span>
+        <span class="k">case</span> <span class="nc">Debit</span><span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="k">if</span> <span class="n">balancePostTransaction</span><span class="o">(</span><span class="n">state</span><span class="o">,</span> <span class="n">in</span><span class="o">)</span> <span class="o">&gt;=</span><span class="mi">0</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="nc">Debited</span><span class="o">(</span><span class="n">x</span><span class="o">),</span> <span class="nc">BankAccount</span><span class="o">(</span><span class="n">balancePostTransaction</span><span class="o">(</span><span class="n">state</span><span class="o">,</span> <span class="n">in</span><span class="o">),</span> <span class="nc">Open</span><span class="o">))</span>
+        <span class="k">case</span> <span class="nc">Debit</span><span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="nc">Debited</span><span class="o">(</span><span class="n">x</span><span class="o">),</span> <span class="nc">BankAccount</span><span class="o">(</span><span class="n">state</span><span class="o">.</span><span class="n">balance</span> <span class="o">,</span> <span class="nc">Guarded</span><span class="o">(</span><span class="nc">Overdrawn</span><span class="o">,</span> <span class="nc">Open</span><span class="o">)))</span>
+       <span class="o">}</span>
+      <span class="o">}</span>
+        <span class="k">case</span> <span class="nc">Guarded</span><span class="o">(</span><span class="nc">Overdrawn</span><span class="o">,</span> <span class="n">prev</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">in</span> <span class="k">match</span> <span class="o">{</span>
+          <span class="c1">// Allow the guarded transition to proceed</span>
+          <span class="k">case</span> <span class="nc">ApproveOverdraw</span><span class="o">(</span><span class="n">amt</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="nc">OverdrawApproved</span><span class="o">(</span><span class="n">amt</span><span class="o">),</span> <span class="nc">BankAccount</span><span class="o">(</span><span class="n">balancePostTransaction</span><span class="o">(</span><span class="n">state</span><span class="o">,</span> <span class="n">in</span><span class="o">),</span> <span class="nc">Overdrawn</span><span class="o">)</span>
+            <span class="c1">// Reject the guarded transition and move back to prior state</span>
+            <span class="k">case</span> <span class="nc">RejectOverdraw</span><span class="o">(</span><span class="n">amt</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="nc">OverdrawRejected</span><span class="o">(</span><span class="n">amt</span><span class="o">),</span> <span class="n">state</span><span class="o">.</span><span class="n">copy</span><span class="o">(</span> <span class="n">state</span> <span class="k">=</span> <span class="n">prev</span><span class="o">))</span>
+        <span class="o">}</span>
+        <span class="k">case</span> <span class="nc">Overdrawn</span> <span class="k">=&gt;</span> <span class="o">{</span>
+          <span class="k">case</span> <span class="nc">Credit</span><span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="o">???</span>
+        <span class="o">}</span> 
+  <span class="o">}</span>
+  <span class="o">}</span>
+
+  <span class="k">private</span> <span class="k">def</span> <span class="n">balancePostTransaction</span><span class="o">(</span><span class="n">acct</span><span class="k">:</span> <span class="kt">BankAccount</span><span class="o">,</span> <span class="n">tran</span><span class="k">:</span> <span class="kt">TranRequest</span><span class="o">)</span><span class="k">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="n">acct</span><span class="o">.</span><span class="n">balance</span> <span class="o">+</span> <span class="n">tran</span><span class="o">.</span><span class="n">amount</span> 
+  <span class="o">}</span>
+
+
+<span class="o">}</span></code></pre></div>
+
+<p>I tend to have a bad habit of throwing a lot of code up before speaking to it, and this is no exception. To start with, we have the <em>Guarded[A,B]</em> type described above, followed by a trivial context (state carrier) and the transition table. Most of the transitions are unrelated to what we’re actually concerned with here, but they help to add some ambiance (or I got distracted and wrote them during this flight…). </p>
+
+<p>The really interesting piece and the entire reason for this post is the use of Guarded. You’ll notice halfway through the transition table that attempts to overdraw don’t result in any change to the account balance and they move the state to Guarded. This pattern allows a quick and easy rollback in the event of a failed overdraw, or a successful transition to Overdrawn with the new amount computed. </p>
+
+<p>What does this buy us? I’ll explain.</p>
+
+<h5 id="why-use-the-guarded-transition-pattern">Why use the <em>Guarded Transition</em> Pattern?</h5>
+<p>When compared to the alternative of wrapping a possibly failing computation up into a transition, the Guarded pattern has two main advantages. First, it forces a complete separation of concerns between the logic and the DFA model. For instance, a possible implementation of this may involve a parent service that orchestrates actions based on the DFA’s response following a transition. This allows the service to wrap the transition up in a Future, execute it synchronously, or do anything else with it, all unbeknown to the DFA. Additionally if events are being persisted real-time w/ something like <a href="link required">Akka Persistence</a> you’ll know exactly what computation was in-progress if the system crashes. Secondly, the guarded transition pattern provides a simple structured error handling &amp; rollback approach for potentially failing transitions. This is especially important if that transition involves a 3rd party service for something like authentication, lookup, etc…</p>
+
