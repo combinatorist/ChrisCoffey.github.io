@@ -4,7 +4,7 @@ title: "Primitive Power"
 modified:
 categories: math
 description:
-tags: []
+tags: [math, functional programming]
 image:
   feature:
   credit:
