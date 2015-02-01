@@ -139,6 +139,212 @@
 <article class="hentry">
   <header>
     <div class="entry-meta">
+      <span class="entry-date date published updated"><time datetime="2014-12-15T06:24:26-05:00"><a href="/programming/building-on-lists/">December 15, 2014</a></time></span><span class="author vcard"><span class="fn"><a href="/about/" title="About Chris Coffey">Chris Coffey</a></span></span>
+      
+      <span class="entry-reading-time pull-right">
+        <i class="fa fa-clock-o"></i>
+        
+        Reading time ~6 minutes
+      </span><!-- /.entry-reading-time -->
+      
+    </div><!-- /.entry-meta -->
+    
+      <h1 class="entry-title"><a href="/programming/building-on-lists/" rel="bookmark" title="Building on Lists" itemprop="url">Building on Lists</a></h1>
+    
+  </header>
+  <div class="entry-content">
+    <p>Functional data structure are kind of a big deal, but what exactly makes them “functional”? After all, isn’t any data structure that works functional? Sorry, bad joke. In fact, a functional data structure is one that, like functional code itself, does not mutate state. Instead, functional data data structures are modified by copying the affected cells of a data structure and making changes in the copy. Okay you say, what does this buy me over a Vector?</p>
+
+<p>To illustrate some of the advantages to functional data structures lets walk through the linked list. Linked lists are, as Chris Okasaki points out in his excellent book <a href="http://www.amazon.com/Purely-Functional-Structures-Chris-Okasaki/dp/0521663504">Purely Functional Data Structures</a>, stacks. That is to say, you can add elements to the head of a list (push), or read off the head (pop). Both structures are head-optimized. So, what does a basic linked list implementation actually look like in Scala? </p>
+
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">abstract</span> <span class="k">class</span> <span class="nc">List_</span>
+
+<span class="k">case</span> <span class="k">object</span> <span class="nc">Nil_</span> <span class="k">extends</span> <span class="nc">List_</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Cons_</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">head</span><span class="k">:</span> <span class="kt">A</span><span class="o">,</span> <span class="n">tail</span><span class="k">:</span> <span class="kt">List_</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">List_</span>
+
+<span class="k">object</span> <span class="nc">List_</span><span class="o">{</span>
+  <span class="k">def</span><span class="o">::[</span><span class="kt">A</span><span class="o">](</span><span class="n">data</span><span class="k">:</span> <span class="kt">A</span><span class="o">,</span> <span class="n">ls</span><span class="k">:</span> <span class="kt">List_</span><span class="o">)</span> <span class="k">=</span> <span class="nc">Cons_</span><span class="o">(</span><span class="n">data</span><span class="o">,</span> <span class="n">ls</span><span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">isEmpty</span><span class="o">(</span><span class="n">ls</span><span class="k">:</span> <span class="kt">List_</span><span class="o">)</span> <span class="k">=</span> <span class="n">ls</span> <span class="k">match</span><span class="o">{</span>
+    <span class="k">case</span> <span class="nc">Nil_</span> <span class="k">=&gt;</span> <span class="kc">true</span>
+    <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="kc">false</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">head</span><span class="o">(</span><span class="n">ls</span><span class="k">:</span> <span class="kt">List_</span><span class="o">)</span> <span class="k">=</span> <span class="n">ls</span> <span class="k">match</span><span class="o">{</span>
+    <span class="k">case</span> <span class="nc">Cons_</span><span class="o">(</span><span class="n">h</span><span class="o">,</span> <span class="n">t</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nc">Some</span><span class="o">(</span><span class="n">h</span><span class="o">)</span>
+    <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="nc">None</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">tail</span><span class="o">(</span><span class="n">ls</span><span class="k">:</span> <span class="kt">List_</span><span class="o">)</span> <span class="k">=</span> <span class="n">ls</span> <span class="k">match</span><span class="o">{</span>
+    <span class="k">case</span> <span class="nc">Cons_</span><span class="o">(</span><span class="k">_</span><span class="o">,</span> <span class="n">t</span><span class="k">:</span> <span class="kt">Cons_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nc">Some</span><span class="o">(</span><span class="n">t</span><span class="o">)</span>
+    <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="nc">None</span>
+  <span class="o">}</span>
+<span class="o">}</span></code></pre></div>
+
+<p>In fairly idiomatic Scala, you’ll start with a base interface List, then provide the empty case Nil. After that, every List is simply a bit of data added to the head of another List, aka Cons. Now lets imagine we want to append two lists together. With a mutable list you can just take the tail element of the list &amp; set it as the head of the second list. However, with a functional list we don’t want to mutate the other list. So, how do we concatenate both lists without mutating either list?</p>
+
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">def</span> <span class="n">append</span><span class="o">(</span><span class="n">as</span><span class="k">:</span> <span class="kt">List_</span><span class="o">,</span> <span class="n">bs</span><span class="k">:</span> <span class="kt">List_</span><span class="o">)</span><span class="k">:</span> <span class="kt">List_</span> <span class="o">=</span> <span class="n">as</span> <span class="k">match</span><span class="o">{</span>
+    <span class="k">case</span> <span class="nc">Nil</span> <span class="k">=&gt;</span> <span class="n">bs</span>
+    <span class="k">case</span> <span class="nc">Cons_</span><span class="o">(</span><span class="n">h</span><span class="o">,</span> <span class="n">t</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nc">Cons_</span><span class="o">(</span><span class="n">h</span><span class="o">,</span> <span class="n">append</span><span class="o">(</span><span class="n">t</span><span class="o">,</span><span class="n">bs</span><span class="o">))</span>
+  <span class="o">}</span></code></pre></div>
+
+<p>As you can see, instead of modifying either list I’ve walked both lists &amp; constructed a third list from their elements. It’s the order of the traversal, from list A’s head -&gt; list B’s tail that ensures the concatenation is in the correct order. There are a few other helper functions like <em>foldLeft</em> and <em>reverse</em> that we’ll need in a moment, so lets add them as well:</p>
+
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">def</span> <span class="n">foldLeft</span><span class="o">[</span><span class="kt">T</span>, <span class="kt">A</span><span class="o">](</span><span class="n">ls</span><span class="k">:</span> <span class="kt">List_</span><span class="o">,</span> <span class="n">seed</span><span class="k">:</span> <span class="kt">T</span><span class="o">)(</span><span class="n">f</span><span class="k">:</span> <span class="o">(</span><span class="kt">A</span><span class="o">,</span> <span class="kt">T</span><span class="o">)</span><span class="k">=&gt;</span> <span class="n">T</span><span class="o">)</span><span class="k">:</span> <span class="kt">T</span> <span class="o">=</span>
+    <span class="n">ls</span> <span class="k">match</span><span class="o">{</span>
+      <span class="k">case</span> <span class="nc">Nil_</span> <span class="k">=&gt;</span> <span class="n">seed</span>
+      <span class="k">case</span> <span class="nc">Cons_</span><span class="o">(</span><span class="n">h</span><span class="k">:</span> <span class="kt">A</span><span class="o">,</span> <span class="n">t</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">foldLeft</span><span class="o">(</span><span class="n">t</span><span class="o">,</span> <span class="n">f</span><span class="o">(</span><span class="n">h</span><span class="o">,</span> <span class="n">seed</span><span class="o">))(</span><span class="n">f</span><span class="o">)</span>
+      <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="n">seed</span>
+    <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">reverse</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">ls</span><span class="k">:</span> <span class="kt">List_</span><span class="o">)</span> <span class="k">=</span> <span class="n">ls</span> <span class="k">match</span><span class="o">{</span>
+    <span class="k">case</span> <span class="nc">Nil_</span> <span class="k">=&gt;</span> <span class="n">ls</span>
+    <span class="k">case</span> <span class="nc">Cons_</span><span class="o">(</span><span class="n">h</span><span class="k">:</span><span class="kt">A</span><span class="o">,</span> <span class="n">t</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">foldLeft</span><span class="o">[</span><span class="kt">List_</span>, <span class="kt">A</span><span class="o">](</span><span class="n">ls</span><span class="o">,</span> <span class="nc">Nil_</span><span class="o">)((</span><span class="n">x</span><span class="o">,</span> <span class="n">seed</span><span class="o">)</span> <span class="o">=&gt;{</span>
+      <span class="n">seed</span> <span class="k">match</span><span class="o">{</span>
+        <span class="k">case</span> <span class="nc">Nil_</span> <span class="k">=&gt;</span> <span class="nc">Cons_</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">h</span><span class="o">,</span> <span class="nc">Nil_</span><span class="o">)</span>
+        <span class="k">case</span> <span class="nc">Cons_</span><span class="o">(</span><span class="n">a</span><span class="k">:</span><span class="kt">A</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nc">Cons_</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">a</span><span class="o">,</span> <span class="n">seed</span><span class="o">)</span>
+      <span class="o">}</span>
+    <span class="o">})</span>
+  <span class="o">}</span></code></pre></div>
+
+<p>Aside from the ugly syntax (easy enough to fix!) this should look somewhat similar to the standard library. Fold Left is still an eager tail-recursive fold, and reverse returns the same elements in opposite order.</p>
+
+<p>Now that we have a solid linked list implementation, lets move one to creating everyone’s favorite FIFO structure, the queue.</p>
+
+<p>Unlike stacks, which are great for parsing &amp; similar algorithms, queues are well-suited for algorithms requiring time-ordering such as processing instructions in the order they were issued. In an imperative setting Queue’s are often implemented using an Array or Vector with pointers to the current head &amp; tail held internally. However, since this implementation relies exclusively on mutation, it’s not going to suffice for our functional queue. Instead, we’ll implement the queue as a pair of lists. The following code illustrates how to construct a basic functional queue:</p>
+
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">case</span> <span class="k">class</span> <span class="nc">Queue_</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">f</span><span class="k">:</span> <span class="kt">List_</span><span class="o">,</span> <span class="n">r</span><span class="k">:</span> <span class="kt">List_</span><span class="o">)</span>
+
+<span class="k">object</span> <span class="nc">Queue_</span><span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">isEmpty</span><span class="o">(</span><span class="n">q</span><span class="k">:</span> <span class="kt">Queue_</span><span class="o">[</span><span class="k">_</span><span class="o">])</span> <span class="k">=</span> <span class="n">q</span> <span class="k">match</span><span class="o">{</span>
+    <span class="k">case</span> <span class="nc">Queue_</span><span class="o">(</span><span class="nc">Nil_</span><span class="o">,</span> <span class="nc">Nil_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="kc">true</span>
+    <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="kc">false</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">enQ</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">a</span><span class="k">:</span> <span class="kt">A</span><span class="o">,</span> <span class="n">q</span><span class="k">:</span> <span class="kt">Queue_</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span> <span class="k">=</span> <span class="nc">Queue_</span><span class="o">(</span><span class="n">q</span><span class="o">.</span><span class="n">f</span><span class="o">,</span> <span class="nc">Cons_</span><span class="o">(</span><span class="n">a</span><span class="o">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r</span><span class="o">))</span>
+
+  <span class="k">def</span> <span class="n">deQ</span><span class="o">[</span><span class="kt">A</span><span class="o">](</span><span class="n">q</span><span class="k">:</span> <span class="kt">Queue_</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span><span class="k">:</span> <span class="o">(</span><span class="kt">Option</span><span class="o">[</span><span class="kt">A</span><span class="o">],</span> <span class="nc">Queue_</span><span class="o">[</span><span class="kt">A</span><span class="o">])</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">q</span> <span class="k">match</span><span class="o">{</span>
+      <span class="k">case</span> <span class="n">x</span> <span class="k">if</span> <span class="n">isEmpty</span><span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="nc">None</span><span class="o">,</span> <span class="n">q</span><span class="o">)</span>
+      <span class="k">case</span> <span class="nc">Queue_</span><span class="o">(</span><span class="nc">_Nil</span><span class="o">,</span> <span class="n">x</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="o">{</span>
+        <span class="k">val</span> <span class="n">newF</span> <span class="k">=</span> <span class="nc">List_</span><span class="o">.</span><span class="n">reverse</span><span class="o">(</span><span class="n">x</span><span class="o">)</span>
+        <span class="o">(</span><span class="nc">List_</span><span class="o">.</span><span class="n">head</span><span class="o">(</span><span class="n">newF</span><span class="o">),</span> <span class="nc">Queue_</span><span class="o">(</span><span class="nc">List_</span><span class="o">.</span><span class="n">tail</span><span class="o">(</span><span class="n">newF</span><span class="o">),</span> <span class="nc">Nil_</span><span class="o">))</span>
+      <span class="o">}</span>
+      <span class="k">case</span> <span class="nc">Queue_</span><span class="o">(</span><span class="n">f</span><span class="o">,</span> <span class="n">r</span><span class="o">)</span> <span class="k">=&gt;</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+<span class="o">}</span></code></pre></div>
+
+<p>Now that’s certainly more interesting than just a plain linked list. Thanks to the extended List implementation I’m able to model the queue as two lists which swap places whenever the front (f) is empty. This means either <em>enQ</em> or <em>deQ</em> will be <em>O(n)</em> in the worst case since it will require a full traversal to preserve ordering. In my example, I chose to provide an <em>O(1)</em> insertion and leave <em>O(n)</em> worst case for removal. You’d need to profile or at least understand your workload better to determine whether this makes sense for a particular use case. </p>
+
+<p>For more reading I really can’t recomend Chris Okasaki’s book enough, but <a href="http://www.manning.com/bjarnason/">Functional Programming In Scala</a> is also a great resource. Good luck &amp; feel free to send me an email with any questions.</p>
+
+  </div><!-- /.entry-content -->
+</article><!-- /.hentry -->
+
+<article class="hentry">
+  <header>
+    <div class="entry-meta">
+      <span class="entry-date date published updated"><time datetime="2014-12-07T16:19:59-05:00"><a href="/programming/scala-finite-state-machines/">December 07, 2014</a></time></span><span class="author vcard"><span class="fn"><a href="/about/" title="About Chris Coffey">Chris Coffey</a></span></span>
+      
+      <span class="entry-reading-time pull-right">
+        <i class="fa fa-clock-o"></i>
+        
+        Reading time ~3 minutes
+      </span><!-- /.entry-reading-time -->
+      
+    </div><!-- /.entry-meta -->
+    
+      <h1 class="entry-title"><a href="/programming/scala-finite-state-machines/" rel="bookmark" title="Scala Finite State Machines" itemprop="url">Scala Finite State Machines</a></h1>
+    
+  </header>
+  <div class="entry-content">
+    <p>I’m assuming the reader is already familiar with finite state machines, otherwise I strongly recommend reading about them. Personally, I find them easiest to read as diagrams rather than tables or strings. For example, here’s a really simple diagram of a baby’s life:</p>
+
+<figure>
+<img src="/images/babyState.png" alt="" />
+<figcaption> Living the life... </figcaption>
+</figure>
+
+<p>Babies only have a couple of states: Happy, Hungry, Sitting on someone’s lap, or Sleeping. Different events may occur in the world that cause the baby to change states. Other events may not change the baby from one state to another, so the baby just continues along as it was.</p>
+
+<p>Implementing this type of structure is really easy in Scala thanks to pattern matching &amp; strong typing. Taking our baby example &amp; translating it to code, we end up with this:</p>
+
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">abstract</span> <span class="k">class</span> <span class="nc">FsmState</span><span class="o">[</span><span class="kt">T</span> <span class="k">&lt;:</span> <span class="kt">Enumeration</span><span class="o">](</span><span class="k">val</span> <span class="n">state</span><span class="k">:</span> <span class="kt">T</span><span class="o">)</span>
+
+<span class="k">object</span> <span class="nc">BabyState</span> <span class="k">extends</span> <span class="nc">Enumeration</span><span class="o">{</span>
+  <span class="k">type</span> <span class="kt">State</span> <span class="o">=</span> <span class="nc">Value</span>
+  <span class="k">val</span> <span class="nc">Happy</span><span class="o">,</span> <span class="nc">Hungry</span><span class="o">,</span> <span class="nc">Sitting</span><span class="o">,</span> <span class="nc">Sleeping</span> <span class="k">=</span> <span class="nc">Value</span>
+<span class="o">}</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Baby</span><span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">babyState</span><span class="k">:</span> <span class="kt">BabyState.State</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">FsmState</span><span class="o">(</span><span class="n">state</span> <span class="k">=</span>  <span class="n">babyState</span><span class="o">)</span>
+
+<span class="k">trait</span> <span class="nc">Event</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Cried</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Event</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Ate</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Event</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Sat</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Event</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">LaidDown</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Event</span>
+
+<span class="k">object</span> <span class="nc">Baby</span><span class="o">{</span>
+
+  <span class="k">private</span> <span class="k">def</span> <span class="n">cloneNewState</span><span class="o">(</span><span class="n">d</span><span class="k">:</span> <span class="kt">Baby</span><span class="o">,</span> <span class="n">s</span><span class="k">:</span> <span class="kt">BabyState.State</span><span class="o">)</span> <span class="k">=</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">copy</span><span class="o">(</span><span class="n">babyState</span> <span class="k">=</span> <span class="n">s</span><span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">transition</span><span class="o">(</span><span class="n">d</span><span class="k">:</span> <span class="kt">Baby</span><span class="o">,</span> <span class="n">e</span><span class="k">:</span> <span class="kt">Event</span><span class="o">)</span><span class="k">:</span> <span class="kt">Baby</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">babyState</span> <span class="k">match</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">BabyState</span><span class="o">.</span><span class="nc">Happy</span> <span class="k">=&gt;</span>
+        <span class="n">e</span> <span class="k">match</span> <span class="o">{</span>
+          <span class="k">case</span> <span class="nc">Cried</span><span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">cloneNewState</span><span class="o">(</span><span class="n">d</span><span class="o">,</span> <span class="nc">BabyState</span><span class="o">.</span><span class="nc">Hungry</span><span class="o">)</span>
+          <span class="k">case</span> <span class="nc">Sat</span><span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">cloneNewState</span><span class="o">(</span><span class="n">d</span><span class="o">,</span> <span class="nc">BabyState</span><span class="o">.</span><span class="nc">Sitting</span><span class="o">)</span>
+          <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="n">d</span>
+        <span class="o">}</span>
+      <span class="k">case</span> <span class="nc">BabyState</span><span class="o">.</span><span class="nc">Hungry</span> <span class="k">=&gt;</span>
+        <span class="n">e</span> <span class="k">match</span> <span class="o">{</span>
+          <span class="k">case</span> <span class="nc">Ate</span><span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">cloneNewState</span><span class="o">(</span><span class="n">d</span><span class="o">,</span> <span class="nc">BabyState</span><span class="o">.</span><span class="nc">Happy</span><span class="o">)</span>
+          <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="n">d</span>
+        <span class="o">}</span>
+      <span class="k">case</span> <span class="nc">BabyState</span><span class="o">.</span><span class="nc">Sitting</span> <span class="k">=&gt;</span>
+        <span class="n">e</span> <span class="k">match</span><span class="o">{</span>
+          <span class="k">case</span> <span class="nc">LaidDown</span><span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">cloneNewState</span><span class="o">(</span><span class="n">d</span><span class="o">,</span> <span class="nc">BabyState</span><span class="o">.</span><span class="nc">Sleeping</span><span class="o">)</span>
+          <span class="k">case</span> <span class="nc">Cried</span><span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">cloneNewState</span><span class="o">(</span><span class="n">d</span><span class="o">,</span> <span class="nc">BabyState</span><span class="o">.</span><span class="nc">Hungry</span><span class="o">)</span>
+          <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="n">d</span>
+        <span class="o">}</span>
+      <span class="k">case</span> <span class="nc">BabyState</span><span class="o">.</span><span class="nc">Sleeping</span> <span class="k">=&gt;</span>
+        <span class="n">e</span> <span class="k">match</span><span class="o">{</span>
+          <span class="k">case</span> <span class="nc">Cried</span><span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">cloneNewState</span><span class="o">(</span><span class="n">d</span><span class="o">,</span> <span class="nc">BabyState</span><span class="o">.</span><span class="nc">Happy</span><span class="o">)</span>
+          <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="n">d</span>
+        <span class="o">}</span>
+      <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="n">d</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+<span class="o">}</span></code></pre></div>
+
+<p>Okay, so that’s a little more than some circles &amp; arrows, but hopefully not too difficult to look at. To start with, I’ve defined an abstract trait<br />
+&lt;div class="highlight"&gt;&lt;pre&gt;<code class="language-scala" data-lang="scala"><span class="nc">FsmState</span><span class="o">[</span><span class="kt">T</span> <span class="k">&lt;:</span> <span class="kt">Enumeration</span><span class="o">]</span></code>&lt;/pre&gt;&lt;/div&gt;
+ which specifies that you’ll need to define a state enumeration &amp; that the FSM state may only ever be in one state (pretty obvious). Next I define the basic case class to contain our state &amp; have it extend 
+&lt;div class="highlight"&gt;&lt;pre&gt;<code class="language-scala" data-lang="scala"><span class="nc">FsmState</span><span class="o">[</span><span class="kt">T</span> <span class="k">&lt;:</span> <span class="kt">Enumeration</span><span class="o">]</span></code>&lt;/pre&gt;&lt;/div&gt;
+.</p>
+
+<p>Now that I have a domain object &amp; some states, its time to build the actual state machine. Like I mentioned above, pattern matching on the Event classes make it incredibly simple to construct the full machine. First, you match on the current 
+&lt;div class="highlight"&gt;&lt;pre&gt;<code class="language-scala" data-lang="scala"><span class="nc">BabyState</span><span class="o">.</span><span class="nc">State</span></code>&lt;/pre&gt;&lt;/div&gt;
+, then either allow a transition to a new state or drop through to the current state if no transition is allowed. Conversely you could return the error-handling type of your choice in the fall-through case. </p>
+
+<p>This machine is trivially simple &amp; doesn’t contain any business logic, but I’ll dive into how to add business logic to the transitions in the next post.</p>
+
+<ul>
+  <li>Special thanks to my 4-month old niece for the FSM inspiration.</li>
+</ul>
+
+  </div><!-- /.entry-content -->
+</article><!-- /.hentry -->
+
+<article class="hentry">
+  <header>
+    <div class="entry-meta">
       <span class="entry-date date published updated"><time datetime="2014-11-28T18:25:59-05:00"><a href="/math/beta-eta-and-lambda/">November 28, 2014</a></time></span><span class="author vcard"><span class="fn"><a href="/about/" title="About Chris Coffey">Chris Coffey</a></span></span>
       
       <span class="entry-reading-time pull-right">

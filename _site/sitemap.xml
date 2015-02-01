@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>/math/category-theory-for-most-of-us/</loc>
+    <lastmod>2015-02-01T14:39:45-05:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>/musings/thoughts-on-micro-services/</loc>
+    <lastmod>2015-01-11T22:09:20-05:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>/math/primitive-power/</loc>
     <lastmod>2015-01-04T17:15:01-05:00</lastmod>
     <priority>0.8</priority>
@@ -32,37 +42,37 @@
   </url>
   <url>
     <loc>/404.html</loc>
-    <lastmod>2015-01-11T23:05:23-05:00</lastmod>
+    <lastmod>2015-02-01T15:11:48-05:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>/posts/</loc>
-    <lastmod>2015-01-11T23:05:23-05:00</lastmod>
+    <lastmod>2015-02-01T15:11:48-05:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>/</loc>
-    <lastmod>2015-01-11T23:05:23-05:00</lastmod>
+    <lastmod>2015-02-01T15:11:48-05:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>/tags/</loc>
-    <lastmod>2015-01-11T23:05:23-05:00</lastmod>
+    <lastmod>2015-02-01T15:11:48-05:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>/about/</loc>
-    <lastmod>2015-01-11T23:05:23-05:00</lastmod>
+    <lastmod>2015-02-01T15:11:48-05:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>/theme-setup/</loc>
-    <lastmod>2015-01-11T23:05:23-05:00</lastmod>
+    <lastmod>2015-02-01T15:11:48-05:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

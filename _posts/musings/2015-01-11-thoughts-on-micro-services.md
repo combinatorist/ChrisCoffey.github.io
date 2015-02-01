@@ -3,7 +3,7 @@ layout: post
 title: "Thoughts on Micro-Services"
 modified:
 categories: musings
-description: Are Micro-Services a new Idea?
+description: Are Micro-Services a new Idea
 tags: [design, musings]
 image:
   feature:
@@ -34,7 +34,7 @@ object MyFirstService {
 
 }
 
-{% end_highlight%}
+{% endhighlight %}
 
 Its small, decoupled, communicates via raw strings (assuming its fronted by some REST interface) & certainly focuses on doing just one small task. Unfortunately no, I don't think this is a microservie, or if it is then it has a truly awful API. This is really just a single function exposed to the world, which means it's either a *God* function that does everything or its too narrowly focused, and either way I think that means this isn't a real micro service. 
 
@@ -44,9 +44,10 @@ I think we need some more view points, so lets turn to Martin Fowler & the good 
 
 This brief definition doesn't to his full article justice, but at its core it shows that micro services help manage complexity in some areas while lifting a significant amount of complexity from a classic 3-tier monolith's code into the operations/ Dev-Ops level. I think this is a spectacular step in the right direction, but I take umbrage with the idea that microservices are a relatively recent phenomenon. 
 
-I don't pretend to be a software historian, but I do happen to know that Unix & Linux are built on top of a very old & very specialized set of tools. The -nix tool-chain adheres to the "do one thing well" philosophy & often exposes their results as a standardized output buffer. These outputs coupled with the venerable **|** allow a collection of specialized tools to be composed together in a clear and logical manner in order to accomplish a larger goal. These specific tools have all been around for ~30 years, and the philosophy goes back even further. 
+I don't pretend to be a software historian, but I do happen to know that Unix & Linux are built on top of a very old & very specialized set of tools. The -nix tool-chain adheres to the "do one thing well" philosophy & often exposes their results as a standardized output buffer. These outputs coupled with the venerable | operator allow a collection of specialized tools to be composed together in a clear and logical manner in order to accomplish a larger goal. These specific tools have all been around for ~30 years, and the philosophy goes back even further. 
 
 And that hits on my own definition of microservices, which is roughly equivalent to Martins but hopefully much clearer: 
+
 > Microservices are internet-connected tools adhering to the Unix "do one thing well" philosophy & sharing a common input/output language
 
 
