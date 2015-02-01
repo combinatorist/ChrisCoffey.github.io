@@ -14,6 +14,17 @@ share:
 date: 2015-01-02T22:09:20-05:00
 ---
 
-Functional design is hard. It's probably easier than good object oriented design, but that's like saying climbing Everest is easier than climbing K2; at a certain point it's all relative. Good functional design, like good problem solving, revolves around breaking down a problem into small, solveable chunks then composing those chuncks back together into a solution. At the point when it no longer makes sense to break down a problem, you have what's called a primative. This isn't the Java primative you learned in school, but rather a no-longer-decomposable unit of functionality for the problem domain at hand. 
+*"A combinator library is a library that offers functions that combine fuctions together to make bigger functions"* 
+- History of Haskell
 
-This concept of itteration & termination is essentially mental recursion in the problem space, which is pretty alien the first time you think about it that way. However, by breaking the real problem into solvable problems you're able to 
+fairly unclear how that maps to the real world
+
+*"... a domain-specific language for describing values of a particular type"*
+
+Combinators are sometimes called Domain specific embedded languages, because they are implemented/embeded within a particular "host" programming language.
+
+Key advantage is separation of problem description from implementation of solution.
+
+Once a DSL is implemented and bootstrapped in the initial host language it can be translated into additional languages without any loss in expressiveness, provided the host type system is injectie w/ respect to the target type system.
+
+DSEL allows you to break y
