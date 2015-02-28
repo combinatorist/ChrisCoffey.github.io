@@ -247,99 +247,6 @@
 <article class="hentry">
   <header>
     <div class="entry-meta">
-      <span class="entry-date date published updated"><time datetime="2015-02-01T14:39:45-05:00"><a href="/math/category-theory-for-most-of-us/">February 01, 2015</a></time></span><span class="author vcard"><span class="fn"><a href="/about/" title="About Chris Coffey">Chris Coffey</a></span></span>
-      
-      <span class="entry-reading-time pull-right">
-        <i class="fa fa-clock-o"></i>
-        
-        Reading time ~3 minutes
-      </span><!-- /.entry-reading-time -->
-      
-    </div><!-- /.entry-meta -->
-    
-      <h1 class="entry-title"><a href="/math/category-theory-for-most-of-us/" rel="bookmark" title="Learning Category Theory" itemprop="url">Learning Category Theory</a></h1>
-    
-  </header>
-  <div class="entry-content">
-    <p>Eugene Yakota’s <a href="http://eed3si9n.com/learning-scalaz/">Learning ScalaZ</a> series of articles are some of the best resources available for folks starting to learn functional programming. I loved following his path through the ScalaZ library &amp; Learn You a Haskell For Great Good, and it was one of the most valuable bits of reading I’ve done. However, I’ve been spending more and more time playing around with Haskell and it seems like in order to really understand what’s going I should learn the theory behind it all. Category Theory to be exact.</p>
-
-<h2 id="what-is-category-theory">What Is Category Theory?</h2>
-
-<p>Stanford defines Category Theory as:</p>
-
-<blockquote>
-  <p>… it is the general mathematical theory of structures and systems of structures.</p>
-</blockquote>
-
-<p>Wikipedia prefers:</p>
-
-<blockquote>
-  <p>Category theory is a mathematical structure … What makes category theory different from the study of other structures is that in a sense the concept of category is an abstraction of a kind of mathematics. (This cannot be made into a precise mathematical definition!) This makes category theory unusually self-referential and capable of treating many of the same questions that mathematical logic treats. In particular, it provides a language that unifies many concepts in different parts of math.</p>
-</blockquote>
-
-<p>There are dozens of other slight variations on this theme, but I think that’s because Category Theory is still a fairly new branch of mathematics. At it’s heart it’s the study of the relationship between different areas of math.</p>
-
-<p>But what is a category?</p>
-
-<p>Categories have two main components:
-- Objects
-   - Objects are points/elements within the category
-- Arrows
-   - Arrows are a directed connection between objects in a given category.</p>
-
-<figure align="center">
-<img src="/images/Scala Category.svg" alt="Categories are Awesome!" />
-<figcaption> The Category of Scala Types </figcaption>
-</figure>
-
-<p>Imagine we have three types, <em>A, B, C</em> within a Scala program, and the ability to map from <em>C → B</em>. This could be something as simple as this:</p>
-
-<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">object</span> <span class="nc">Test</span> <span class="o">{</span>
-	<span class="k">type</span> <span class="kt">C</span> <span class="o">=</span> <span class="nc">Int</span>
-	<span class="k">type</span> <span class="kt">B</span> <span class="o">=</span> <span class="nc">BigDecimal</span> 
-	<span class="k">type</span> <span class="kt">A</span> <span class="o">=</span> <span class="nc">String</span>
-
-	<span class="k">def</span> <span class="n">c_→</span><span class="nc">_b</span><span class="o">(</span><span class="n">c</span><span class="k">:</span> <span class="kt">C</span><span class="o">)</span><span class="k">:</span> <span class="kt">B</span> <span class="o">=</span> <span class="nc">BigDecimal</span><span class="o">(</span><span class="n">c</span><span class="o">)</span>
-	<span class="k">def</span> <span class="n">b_→</span><span class="nc">_a</span><span class="o">(</span><span class="n">b</span><span class="k">:</span> <span class="kt">B</span><span class="o">)</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=</span> <span class="n">b</span> <span class="n">toString</span> 
-<span class="o">}</span></code></pre></div>
-
-<p>Obviously the actual category of Scala types is infinite, but in this simple example you can see category <em>T</em> contains a few objects and some arrows between them. Those arrows are each functions from object <em>O₀</em> to <em>O₁</em> and <em>O₁</em> to <em>O₂</em>, and as functions this means we can compose them together. Composition is awesome, not in the least because it allows us to add another implied arrow from <em>C</em> → <em>A</em> by composing <em>C → B → A</em>.</p>
-
-<p>So now our category actually looks like this:</p>
-
-<figure align="center">
-<img src="/images/Scala Category implied arrow.svg" alt="OOOhh, arrows can compose. This looks interesting!" />
-<figcaption>Composing Arrows</figcaption>
-</figure>
-
-<p>Because arrows are also functions and we can compose this, you can legally write  b<em>→_a compose  c</em>→_b {% raw %}, effectively creating a new function from <em>C → A</em>! Extending your code without actually having to write any new code is pretty awesome, and we know this is safe because the arrows in category T prove it (and the compiler + type system prove it in Scala).</p>
-
-<h2 id="arrow-composition-laws">Arrow Composition Laws</h2>
-
-<p>Composing arrows follows the same basic laws as composing functions. That is to say, arrows are associative and have an identity.</p>
-
-<ol>
-  <li>Associativity
-    <ul>
-      <li>Arrows composed together do not need to parenthesis. Ordering of arrows remains important, but where the parenthesis are placed doesn’t matter.</li>
-      <li><em>a • b • c = a •(b * c) = (a • b) • c</em></li>
-    </ul>
-  </li>
-  <li>Identity
-    <ul>
-      <li>All objects in a category have a self-referential arrow. This arrow provides a unit/zero/identity for elements in the category, just like 0 is the identity for addition/subtraction or 1 across multiplication/division. In a category, the identity arrow is an important unit of composition because it is both always present on any given object &amp; provides a valid starting point when performing composition.</li>
-    </ul>
-  </li>
-</ol>
-
-<p>These composition laws allow us to work with Categories independently of any understanding about what the objects actually are. Instead, you’re able to reason about how objects within a category relate to each other via their arrows. </p>
-
-  </div><!-- /.entry-content -->
-</article><!-- /.hentry -->
-
-<article class="hentry">
-  <header>
-    <div class="entry-meta">
       <span class="entry-date date published updated"><time datetime="2015-01-11T22:09:20-05:00"><a href="/musings/thoughts-on-micro-services/">January 11, 2015</a></time></span><span class="author vcard"><span class="fn"><a href="/about/" title="About Chris Coffey">Chris Coffey</a></span></span>
       
       <span class="entry-reading-time pull-right">
@@ -571,6 +478,79 @@ These services are small, highly decoupled, and focus on doing a small task.</p>
 
 <h5 id="why-use-the-guarded-transition-pattern">Why use the <em>Guarded Transition</em> Pattern?</h5>
 <p>When compared to the alternative of wrapping a possibly failing computation up into a transition, the Guarded pattern has two main advantages. First, it forces a complete separation of concerns between the logic and the DFA model. For instance, a possible implementation of this may involve a parent service that orchestrates actions based on the DFA’s response following a transition. This allows the service to wrap the transition up in a Future, execute it synchronously, or do anything else with it, all unbeknown to the DFA. Additionally if events are being persisted real-time w/ something like <a href="link required">Akka Persistence</a> you’ll know exactly what computation was in-progress if the system crashes. Secondly, the guarded transition pattern provides a simple structured error handling &amp; rollback approach for potentially failing transitions. This is especially important if that transition involves a 3rd party service for something like authentication, lookup, etc…</p>
+
+
+  </div><!-- /.entry-content -->
+</article><!-- /.hentry -->
+
+<article class="hentry">
+  <header>
+    <div class="entry-meta">
+      <span class="entry-date date published updated"><time datetime="2014-12-17T19:50:10-05:00"><a href="/math/lambda-calculus-whats-it-good-for/">December 17, 2014</a></time></span><span class="author vcard"><span class="fn"><a href="/about/" title="About Chris Coffey">Chris Coffey</a></span></span>
+      
+      <span class="entry-reading-time pull-right">
+        <i class="fa fa-clock-o"></i>
+        
+        Reading time ~3 minutes
+      </span><!-- /.entry-reading-time -->
+      
+    </div><!-- /.entry-meta -->
+    
+      <h1 class="entry-title"><a href="/math/lambda-calculus-whats-it-good-for/" rel="bookmark" title="Lambda Calculus: What's It Good For?" itemprop="url">Lambda Calculus: What's It Good For?</a></h1>
+    
+  </header>
+  <div class="entry-content">
+    <p>“What’s the point of λ Calculus?”
+	- Matt</p>
+
+<p>I started this blog off with <a href="http://chriscoffey.github.io/math/beta-eta-and-lambda/">Lambda Calculus for Government Majors</a> which covered the basic concepts &amp; definitions of lambda calculus. But honestly, knowing what λ means doesn’t really get you anywhere. My colleague Matt pointed this out after reading the piece, and he’s right. So what can you do with λ calculus? I mean really, what’s the point of this fancy algebra? Hopefully the following article explains why people get so excited about this stuff.</p>
+
+<h3 id="refresher">Refresher</h3>
+
+<p>λa.a  =&gt;  λ indicates this is a lambda expression/function
+β reduction =&gt; replace a given λ expression with a common name
+α conversion =&gt; create unique names for each variable to prevent collisions
+η reduction =&gt; strip out unnecessary bound variables</p>
+
+<p>For more info on these just take a peek back at my earlier post.</p>
+
+<h3 id="addition">Addition</h3>
+
+<p>Before getting into what you can do with λ calculus, I should probably show an example of how it actually works once it’s been expanded. Expanding a λ expression is essentially replacing bound variables with provided arguments. This can end up throwing a ton of λ and parens at you, but it helps clarify the relationship between a reduced function &amp; any data passed in. To start with, I’ll take advantage of the fact that λ calculus is simple. So simple that it has no concept of numbers, addition, or anything else. This poses a bit of a problem if I’m trying to illustrate using λ for addition. I guess we’ll just start at the beginning and define the natural numbers.</p>
+
+<p>We know that for all natural numbers  <em>x</em> &gt;= 0 that <em>x</em> + 1 is also a natural number. This means the notation we’re all use to actually use for, say 5, is equivalent to 0+1+1+1+1+1. I’ll use Church encoding (named after Alonzo Church, the inventor of λ calculus) to encode this property into valid λ functions.</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">zero</span> <span class="o">=</span> λa.λn.n
+	<span class="nv">one</span> <span class="o">=</span> λa.λn.a n
+	<span class="nv">two</span> <span class="o">=</span> λa.λn.a <span class="o">(</span>a n<span class="o">)</span>
+	<span class="nv">three</span> <span class="o">=</span> λa.λn.a <span class="o">(</span>a <span class="o">(</span>a  n<span class="o">))</span>
+	....</code></pre></div>
+
+<p>What’s really interesting about these numbers and pretty much every other λ expression you’ll see is that it’s a higher order function, or a function that takes another function. Those lambda expressions will grow pretty large pretty quickly, so I’ll just be using normal numbers instead (developers are lazy after all). </p>
+
+<p>Are we ready for addition yet? We know how to create numbers, so what else do we need? It turns out not much:</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">add</span> <span class="o">=</span> λx.λy.λa.λn.m a <span class="o">(</span>y a x<span class="o">)</span></code></pre></div>
+
+<p>So now that I have a whole bunch of λ’s &amp; some parens, what’s actually going on here? Let’s use 1 + 1 as an example:</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">add<span class="o">(</span> one one<span class="o">)</span> <span class="o">=</span> <span class="o">((</span>λx.λy.λa.λn.x a <span class="o">(</span>y a n<span class="o">)</span> <span class="o">)</span> λc.λd.c d <span class="o">)</span> λ.e.λf.e <span class="nv">f</span>
+	<span class="o">=</span>&gt; I performed an α conversion on the line above to avoid shadowing on <span class="s1">&#39;one&#39;</span>
+	<span class="o">((</span>λc.λd.c d<span class="o">)</span> a <span class="o">(</span>y a n<span class="o">))</span> λe.λf.e f
+	<span class="o">((</span>λc.λd.c d<span class="o">)</span> a <span class="o">((</span>λ.e.λf.e f<span class="o">)</span> a n<span class="o">))</span>
+	c <span class="o">((</span>λe.λf.e f<span class="o">)</span> a n<span class="o">)</span>
+	a <span class="o">(</span>a n<span class="o">)</span></code></pre></div>
+
+<p>Who knew something as simple as 1 + 1 would expand into that! Thankfully this is the equivalent of doing binary arithmetic in assembler, i.e. something you won’t need to do again. On the positive side this illustrates the power of function expansion using higher order functions. It takes a while to work through, and I’d strongly recommend working through the same example using 1 + 2 since you already know the answer is λa.λn.a (a (a n)).</p>
+
+<h3 id="what-use-is-this">What Use Is This?</h3>
+<p>One word. Compilers. When you step back and think about it, λ Calculus is actually Turing Complete (hopefully that’s more apparent after our foray into Church encoding), so it’s a good fit for trying things out quickly. Anything that can compile down to λ Calculus (any Turing complete language) can then be translated up into another language for execution. So whenever someone says “every language is the same” you can show off your knowledge of λ calculus &amp; isomorphisms between languages!</p>
+
+<p>Hopefully this helped, but if you want to learn more check out these resources:</p>
+
+<p><a href="http://en.wikipedia.org/wiki/Lambda_calculus">Wikipedia</a></p>
+
+<p><a href="http://matt.might.net/articles/compiling-up-to-lambda-calculus/">Compiling Up to Lambda Calculus</a></p>
 
 
   </div><!-- /.entry-content -->

@@ -4,7 +4,7 @@
 <generator uri="https://github.com/mojombo/jekyll">Jekyll</generator>
 <link rel="self" type="application/atom+xml" href="/feed.xml" />
 <link rel="alternate" type="text/html" href="" />
-<updated>2015-02-28T16:49:46-05:00</updated>
+<updated>2015-02-28T16:51:33-05:00</updated>
 <id>/</id>
 <author>
   <name>Chris Coffey</name>
@@ -113,94 +113,6 @@
 &lt;p&gt;Hopefully after reading this &amp;amp; playing around with the code you’re as excited about what Parboiled2 can do! (I’m not going to show you how to test your serialization code)&lt;/p&gt;
 
   &lt;p&gt;&lt;a href=&quot;/programming/parsing-sql-ddl-schema/&quot;&gt;Parsing SQL DDL Schema With Parboiled2&lt;/a&gt; was originally published by Chris Coffey at &lt;a href=&quot;&quot;&gt;Fun With Code&lt;/a&gt; on February 28, 2015.&lt;/p&gt;</content>
-</entry>
-
-
-<entry>
-  <title type="html"><![CDATA[Learning Category Theory]]></title>
- <link rel="alternate" type="text/html" href="/math/category-theory-for-most-of-us/" />
-  <id>/math/category-theory-for-most-of-us</id>
-  <published>2015-02-01T14:39:45-05:00</published>
-  <updated>2015-02-01T14:39:45-05:00</updated>
-  <author>
-    <name>Chris Coffey</name>
-    <uri></uri>
-    <email>Christopher.m.Coffey@gmail.com</email>
-  </author>
-  <content type="html">&lt;p&gt;Eugene Yakota’s &lt;a href=&quot;http://eed3si9n.com/learning-scalaz/&quot;&gt;Learning ScalaZ&lt;/a&gt; series of articles are some of the best resources available for folks starting to learn functional programming. I loved following his path through the ScalaZ library &amp;amp; Learn You a Haskell For Great Good, and it was one of the most valuable bits of reading I’ve done. However, I’ve been spending more and more time playing around with Haskell and it seems like in order to really understand what’s going I should learn the theory behind it all. Category Theory to be exact.&lt;/p&gt;
-
-&lt;h2 id=&quot;what-is-category-theory&quot;&gt;What Is Category Theory?&lt;/h2&gt;
-
-&lt;p&gt;Stanford defines Category Theory as:&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;… it is the general mathematical theory of structures and systems of structures.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;Wikipedia prefers:&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;Category theory is a mathematical structure … What makes category theory different from the study of other structures is that in a sense the concept of category is an abstraction of a kind of mathematics. (This cannot be made into a precise mathematical definition!) This makes category theory unusually self-referential and capable of treating many of the same questions that mathematical logic treats. In particular, it provides a language that unifies many concepts in different parts of math.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;There are dozens of other slight variations on this theme, but I think that’s because Category Theory is still a fairly new branch of mathematics. At it’s heart it’s the study of the relationship between different areas of math.&lt;/p&gt;
-
-&lt;p&gt;But what is a category?&lt;/p&gt;
-
-&lt;p&gt;Categories have two main components:
-- Objects
-   - Objects are points/elements within the category
-- Arrows
-   - Arrows are a directed connection between objects in a given category.&lt;/p&gt;
-
-&lt;figure align=&quot;center&quot;&gt;
-&lt;img src=&quot;/images/Scala Category.svg&quot; alt=&quot;Categories are Awesome!&quot; /&gt;
-&lt;figcaption&gt; The Category of Scala Types &lt;/figcaption&gt;
-&lt;/figure&gt;
-
-&lt;p&gt;Imagine we have three types, &lt;em&gt;A, B, C&lt;/em&gt; within a Scala program, and the ability to map from &lt;em&gt;C → B&lt;/em&gt;. This could be something as simple as this:&lt;/p&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;k&quot;&gt;object&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Test&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;C&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Int&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;BigDecimal&lt;/span&gt; 
-	&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;String&lt;/span&gt;
-
-	&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c_→&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;_b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;C&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;BigDecimal&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b_→&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;_a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;toString&lt;/span&gt; 
-&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;Obviously the actual category of Scala types is infinite, but in this simple example you can see category &lt;em&gt;T&lt;/em&gt; contains a few objects and some arrows between them. Those arrows are each functions from object &lt;em&gt;O₀&lt;/em&gt; to &lt;em&gt;O₁&lt;/em&gt; and &lt;em&gt;O₁&lt;/em&gt; to &lt;em&gt;O₂&lt;/em&gt;, and as functions this means we can compose them together. Composition is awesome, not in the least because it allows us to add another implied arrow from &lt;em&gt;C&lt;/em&gt; → &lt;em&gt;A&lt;/em&gt; by composing &lt;em&gt;C → B → A&lt;/em&gt;.&lt;/p&gt;
-
-&lt;p&gt;So now our category actually looks like this:&lt;/p&gt;
-
-&lt;figure align=&quot;center&quot;&gt;
-&lt;img src=&quot;/images/Scala Category implied arrow.svg&quot; alt=&quot;OOOhh, arrows can compose. This looks interesting!&quot; /&gt;
-&lt;figcaption&gt;Composing Arrows&lt;/figcaption&gt;
-&lt;/figure&gt;
-
-&lt;p&gt;Because arrows are also functions and we can compose this, you can legally write  b&lt;em&gt;→_a compose  c&lt;/em&gt;→_b {% raw %}, effectively creating a new function from &lt;em&gt;C → A&lt;/em&gt;! Extending your code without actually having to write any new code is pretty awesome, and we know this is safe because the arrows in category T prove it (and the compiler + type system prove it in Scala).&lt;/p&gt;
-
-&lt;h2 id=&quot;arrow-composition-laws&quot;&gt;Arrow Composition Laws&lt;/h2&gt;
-
-&lt;p&gt;Composing arrows follows the same basic laws as composing functions. That is to say, arrows are associative and have an identity.&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;Associativity
-    &lt;ul&gt;
-      &lt;li&gt;Arrows composed together do not need to parenthesis. Ordering of arrows remains important, but where the parenthesis are placed doesn’t matter.&lt;/li&gt;
-      &lt;li&gt;&lt;em&gt;a • b • c = a •(b * c) = (a • b) • c&lt;/em&gt;&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Identity
-    &lt;ul&gt;
-      &lt;li&gt;All objects in a category have a self-referential arrow. This arrow provides a unit/zero/identity for elements in the category, just like 0 is the identity for addition/subtraction or 1 across multiplication/division. In a category, the identity arrow is an important unit of composition because it is both always present on any given object &amp;amp; provides a valid starting point when performing composition.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;These composition laws allow us to work with Categories independently of any understanding about what the objects actually are. Instead, you’re able to reason about how objects within a category relate to each other via their arrows. &lt;/p&gt;
-
-  &lt;p&gt;&lt;a href=&quot;/math/category-theory-for-most-of-us/&quot;&gt;Learning Category Theory&lt;/a&gt; was originally published by Chris Coffey at &lt;a href=&quot;&quot;&gt;Fun With Code&lt;/a&gt; on February 01, 2015.&lt;/p&gt;</content>
 </entry>
 
 
