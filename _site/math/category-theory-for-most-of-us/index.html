@@ -5,21 +5,21 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en"><!--<![endif]-->
 <head>
 <meta charset="utf-8">
-<title>Category Theory for Most of Us &#8211; Fun With Code</title>
+<title>Learning Category Theory &#8211; Fun With Code</title>
 <meta name="description" content="The Ramblings Of a Programmer.">
-<meta name="keywords" content="">
+<meta name="keywords" content="math, category theory">
 
 <!-- Twitter Cards -->
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="/images/">
-<meta name="twitter:title" content="Category Theory for Most of Us">
+<meta name="twitter:title" content="Learning Category Theory">
 <meta name="twitter:description" content="The Ramblings Of a Programmer.">
 <meta name="twitter:creator" content="@https://twitter.com/_chriscoffey">
 
 <!-- Open Graph -->
 <meta property="og:locale" content="en_US">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Category Theory for Most of Us">
+<meta property="og:title" content="Learning Category Theory">
 <meta property="og:description" content="The Ramblings Of a Programmer.">
 <meta property="og:url" content="/math/category-theory-for-most-of-us/">
 <meta property="og:site_name" content="Fun With Code">
@@ -125,24 +125,95 @@
     <header class="header-title">
       <div class="header-title-wrap">
         
-          <h1 class="entry-title"><a href="/math/category-theory-for-most-of-us/" rel="bookmark" title="Category Theory for Most of Us">Category Theory for Most of Us</a></h1>
+          <h1 class="entry-title"><a href="/math/category-theory-for-most-of-us/" rel="bookmark" title="Learning Category Theory">Learning Category Theory</a></h1>
         
         <h2>February 01, 2015</h2>
         
         <p class="entry-reading-time">
           <i class="fa fa-clock-o"></i>
           
-          Reading time ~1 minute
+          Reading time ~3 minutes
         </p><!-- /.entry-reading-time -->
         
       </div><!-- /.header-title-wrap -->
     </header>
     <div class="entry-content">
-      
+      <p>Eugene Yakota’s <a href="http://eed3si9n.com/learning-scalaz/">Learning ScalaZ</a> series of articles are some of the best resources available for folks starting to learn functional programming. I loved following his path through the ScalaZ library &amp; Learn You a Haskell For Great Good, and it was one of the most valuable bits of reading I’ve done. However, I’ve been spending more and more time playing around with Haskell and it seems like in order to really understand what’s going I should learn the theory behind it all. Category Theory to be exact.</p>
+
+<h2 id="what-is-category-theory">What Is Category Theory?</h2>
+
+<p>Stanford defines Category Theory as:</p>
+
+<blockquote>
+  <p>… it is the general mathematical theory of structures and systems of structures.</p>
+</blockquote>
+
+<p>Wikipedia prefers:</p>
+
+<blockquote>
+  <p>Category theory is a mathematical structure … What makes category theory different from the study of other structures is that in a sense the concept of category is an abstraction of a kind of mathematics. (This cannot be made into a precise mathematical definition!) This makes category theory unusually self-referential and capable of treating many of the same questions that mathematical logic treats. In particular, it provides a language that unifies many concepts in different parts of math.</p>
+</blockquote>
+
+<p>There are dozens of other slight variations on this theme, but I think that’s because Category Theory is still a fairly new branch of mathematics. At it’s heart it’s the study of the relationship between different areas of math.</p>
+
+<p>But what is a category?</p>
+
+<p>Categories have two main components:
+- Objects
+   - Objects are points/elements within the category
+- Arrows
+   - Arrows are a directed connection between objects in a given category.</p>
+
+<figure align="center">
+<img src="/images/Scala Category.svg" alt="Categories are Awesome!" />
+<figcaption> The Category of Scala Types </figcaption>
+</figure>
+
+<p>Imagine we have three types, <em>A, B, C</em> within a Scala program, and the ability to map from <em>C → B</em>. This could be something as simple as this:</p>
+
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">object</span> <span class="nc">Test</span> <span class="o">{</span>
+	<span class="k">type</span> <span class="kt">C</span> <span class="o">=</span> <span class="nc">Int</span>
+	<span class="k">type</span> <span class="kt">B</span> <span class="o">=</span> <span class="nc">BigDecimal</span> 
+	<span class="k">type</span> <span class="kt">A</span> <span class="o">=</span> <span class="nc">String</span>
+
+	<span class="k">def</span> <span class="n">c_→</span><span class="nc">_b</span><span class="o">(</span><span class="n">c</span><span class="k">:</span> <span class="kt">C</span><span class="o">)</span><span class="k">:</span> <span class="kt">B</span> <span class="o">=</span> <span class="nc">BigDecimal</span><span class="o">(</span><span class="n">c</span><span class="o">)</span>
+	<span class="k">def</span> <span class="n">b_→</span><span class="nc">_a</span><span class="o">(</span><span class="n">b</span><span class="k">:</span> <span class="kt">B</span><span class="o">)</span><span class="k">:</span> <span class="kt">A</span> <span class="o">=</span> <span class="n">b</span> <span class="n">toString</span> 
+<span class="o">}</span></code></pre></div>
+
+<p>Obviously the actual category of Scala types is infinite, but in this simple example you can see category <em>T</em> contains a few objects and some arrows between them. Those arrows are each functions from object <em>O₀</em> to <em>O₁</em> and <em>O₁</em> to <em>O₂</em>, and as functions this means we can compose them together. Composition is awesome, not in the least because it allows us to add another implied arrow from <em>C</em> → <em>A</em> by composing <em>C → B → A</em>.</p>
+
+<p>So now our category actually looks like this:</p>
+
+<figure align="center">
+<img src="/images/Scala Category implied arrow.svg" alt="OOOhh, arrows can compose. This looks interesting!" />
+<figcaption>Composing Arrows</figcaption>
+</figure>
+
+<p>Because arrows are also functions and we can compose this, you can legally write  b<em>→_a compose  c</em>→_b {% raw %}, effectively creating a new function from <em>C → A</em>! Extending your code without actually having to write any new code is pretty awesome, and we know this is safe because the arrows in category T prove it (and the compiler + type system prove it in Scala).</p>
+
+<h2 id="arrow-composition-laws">Arrow Composition Laws</h2>
+
+<p>Composing arrows follows the same basic laws as composing functions. That is to say, arrows are associative and have an identity.</p>
+
+<ol>
+  <li>Associativity
+    <ul>
+      <li>Arrows composed together do not need to parenthesis. Ordering of arrows remains important, but where the parenthesis are placed doesn’t matter.</li>
+      <li><em>a • b • c = a •(b * c) = (a • b) • c</em></li>
+    </ul>
+  </li>
+  <li>Identity
+    <ul>
+      <li>All objects in a category have a self-referential arrow. This arrow provides a unit/zero/identity for elements in the category, just like 0 is the identity for addition/subtraction or 1 across multiplication/division. In a category, the identity arrow is an important unit of composition because it is both always present on any given object &amp; provides a valid starting point when performing composition.</li>
+    </ul>
+  </li>
+</ol>
+
+<p>These composition laws allow us to work with Categories independently of any understanding about what the objects actually are. Instead, you’re able to reason about how objects within a category relate to each other via their arrows. </p>
 
       <footer class="entry-meta">
-        <span class="entry-tags"></span>
-        <span><a href="/math/category-theory-for-most-of-us/" rel="bookmark" title="Category Theory for Most of Us">Category Theory for Most of Us</a> was published on <span class="entry-date date published updated"><time datetime="2015-02-01T14:39:45-05:00">February 01, 2015</time></span></span>
+        <span class="entry-tags"><a href="/tags/#math" title="Pages tagged math" class="tag">math</a><a href="/tags/#category theory" title="Pages tagged category theory" class="tag">category theory</a></span>
+        <span><a href="/math/category-theory-for-most-of-us/" rel="bookmark" title="Learning Category Theory">Learning Category Theory</a> was published on <span class="entry-date date published updated"><time datetime="2015-02-01T14:39:45-05:00">February 01, 2015</time></span></span>
         
         <span class="author vcard"><span class="fn"><a href="/about/" title="About Chris Coffey">Chris Coffey</a></span></span>
         <div class="social-share">
@@ -161,20 +232,20 @@
       <a href="/musings/thoughts-on-micro-services/" class="read-more-btn">Read More</a>
     </div><!-- /.read-more-header -->
     <div class="read-more-content">
-      <h3><a href="/musings/thoughts-on-micro-services/" title="Thoughts on Micro-Services">Thoughts on Micro-Services</a></h3>
-      <p>Are Micro-Services a new Idea <a href="/musings/thoughts-on-micro-services/">Continue reading</a></p>
+      <h3><a href="/programming/parsing-sql-ddl-schema/" title="Parsing SQL DDL Schema With Parboiled2">Parsing SQL DDL Schema With Parboiled2</a></h3>
+      <p>Its been a long time since I've written anything, we just started a pivot at Leaf so things have been pretty crazy. But like any radical ...&hellip; <a href="/programming/parsing-sql-ddl-schema/">Continue reading</a></p>
     </div><!-- /.read-more-content -->
   
   <div class="read-more-list">
     
       <div class="list-item">
-        <h4><a href="/math/primitive-power/" title="Primitive Power">Primitive Power</a></h4>
-        <span>Published on January 04, 2015</span>
+        <h4><a href="/musings/thoughts-on-micro-services/" title="Thoughts on Micro-Services">Thoughts on Micro-Services</a></h4>
+        <span>Published on January 11, 2015</span>
       </div><!-- /.list-item -->
     
       <div class="list-item">
-        <h4><a href="/more-state-machines/" title="More State Machines">More State Machines</a></h4>
-        <span>Published on December 23, 2014</span>
+        <h4><a href="/math/primitive-power/" title="Primitive Power">Primitive Power</a></h4>
+        <span>Published on January 04, 2015</span>
       </div><!-- /.list-item -->
     
   </div><!-- /.read-more-list -->

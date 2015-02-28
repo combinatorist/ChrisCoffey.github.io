@@ -4,7 +4,7 @@
 <generator uri="https://github.com/mojombo/jekyll">Jekyll</generator>
 <link rel="self" type="application/atom+xml" href="/feed.xml" />
 <link rel="alternate" type="text/html" href="" />
-<updated>2015-02-01T15:11:48-05:00</updated>
+<updated>2015-02-28T16:49:46-05:00</updated>
 <id>/</id>
 <author>
   <name>Chris Coffey</name>
@@ -14,7 +14,110 @@
 
 
 <entry>
-  <title type="html"><![CDATA[Category Theory for Most of Us]]></title>
+  <title type="html"><![CDATA[Parsing SQL DDL Schema With Parboiled2]]></title>
+ <link rel="alternate" type="text/html" href="/programming/parsing-sql-ddl-schema/" />
+  <id>/programming/parsing-sql-ddl-schema</id>
+  <published>2015-02-28T13:48:06-05:00</published>
+  <updated>2015-02-28T13:48:06-05:00</updated>
+  <author>
+    <name>Chris Coffey</name>
+    <uri></uri>
+    <email>Christopher.m.Coffey@gmail.com</email>
+  </author>
+  <content type="html">&lt;p&gt;Its been a long time since I’ve written anything, we just started a pivot at Leaf so things have been pretty crazy. But like any radical change, there have been a ton of new things to explore and learn from as well, so I suppose there’s a silver lining in there.&lt;/p&gt;
+
+&lt;p&gt;As we’re converting our code over to a new platform we’ve switched persistence from Kafka to Postgres which means there’s a whole world of serialization code we need to write &amp;amp; test. Normally SQL databases are difficult to unit test and can only be tested by running integration tests that rely on programs running outside the scope of your project. For testing behavior, I still can’t think of a better way but a colleauge’s off-hand remark that its impossible to test &lt;em&gt;any&lt;/em&gt; of the SQL code got me thinking on my commute home.&lt;/p&gt;
+
+&lt;p&gt;First off, what would the requirements be for testing SQL? What can you reasonably test given some code &amp;amp; the DDL for schema creation?&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Needs to ensure column names are serialized correctly&lt;/li&gt;
+  &lt;li&gt;Can’t rely on any files outside of the project&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;That seems like a manageable set of requirements to start with. To start with, since the only thing I’m comparing are the column names, lets take a look at an example file:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sql&quot; data-lang=&quot;sql&quot;&gt;&lt;span class=&quot;c1&quot;&gt;--comment comment&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;create&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;table&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tables&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;identity&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;label&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;varchar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;15&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;location&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;null&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;create&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;table&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;locations&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;identity&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;varchar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;15&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;owner&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;varchar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;50&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;null&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;-- more comments&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Anyone would agree this is a really simple SQL schema, but does that mean it’s really simple to parse? To help answer this question lets investigate the basic grammar for that SQL statement. I’m going to drop the &lt;strong&gt;&amp;lt;&lt;/strong&gt; and &lt;strong&gt;&amp;gt;&lt;/strong&gt; around all of the identifiers because I think they clutter the grammar. &lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;nc&quot;&gt;DDL&lt;/span&gt;         &lt;span class=&quot;o&quot;&gt;::=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Statements&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Gap&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Statements&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;::=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Statement&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Gap&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Statement&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Statements&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Gap&lt;/span&gt;         &lt;span class=&quot;o&quot;&gt;::=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Whitespace&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Newline&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Statement&lt;/span&gt;   &lt;span class=&quot;o&quot;&gt;::=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Operator&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;(&amp;quot;&lt;/span&gt;  &lt;span class=&quot;nc&quot;&gt;Arguments&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;)&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Operator&lt;/span&gt;    &lt;span class=&quot;o&quot;&gt;::=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;create table&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Arguments&lt;/span&gt;   &lt;span class=&quot;o&quot;&gt;::=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Arg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Arg&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;,&amp;quot;&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Arguments&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Arg&lt;/span&gt;         &lt;span class=&quot;o&quot;&gt;::=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Name&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;DataType&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Nullable&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Name&lt;/span&gt;        &lt;span class=&quot;o&quot;&gt;::=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;text_literal&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;DataType&lt;/span&gt;    &lt;span class=&quot;o&quot;&gt;::=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Category&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Category&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;(&amp;quot;&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Size&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;)&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Category&lt;/span&gt;    &lt;span class=&quot;o&quot;&gt;::=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;int&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;varchar&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Nullable&lt;/span&gt;    &lt;span class=&quot;o&quot;&gt;::=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;null&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;not null&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Whitespace&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;::=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Space&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Tab&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Space&lt;/span&gt;       &lt;span class=&quot;o&quot;&gt;::=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot; &amp;quot;&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Tab&lt;/span&gt;         &lt;span class=&quot;o&quot;&gt;::=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;\t&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;NewLine&lt;/span&gt;     &lt;span class=&quot;o&quot;&gt;::=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;\n&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;\r&amp;quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This grammar says that a DDL file consists of 0 or more Statements, each separated by a gap of whitespace or a line break. Each statement is composed of one or more arguments, which maps directly onto our intuition that a schema consists of one or more tables, each made up of one or more columns. This isomorphism is valuable for understanding how exactly we’ll parse this statement into something we can use to help with our unit testing. To start with, I’ll need an object that mimics what I want for my column name testing and some of the tokens I’ll be looking for.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;tbl&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;columns&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Seq&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;])&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;\r&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;NewLine&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;\n&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Comma&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;,&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Space&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot; &amp;quot;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;CreateTable&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;table&amp;quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;I chose to represent &lt;strong&gt;CreateTable&lt;/strong&gt; as just the word &lt;em&gt;table&lt;/em&gt; rather than &lt;em&gt;create table&lt;/em&gt; as an optimization that I’ll delve into later.&lt;/p&gt;
+
+&lt;p&gt;Now that the tokens are in place, its time to start building the elements of my SQL DDL grammar. &lt;a href=&quot;https://github.com/sirthias/parboiled2&quot;&gt;Parboiled2&lt;/a&gt;, the excellent Scala parsing library by Mathias Doenitz &amp;amp; co. allows me to write code that closely mirrors the BNF grammar, which means as you write your grammar you can actually test it out real-time &amp;amp; the code should read just like the grammar. Pretty cool stuff, now lets write some code!&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;DdlParser&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;ParserInput&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;columnStart&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Parser&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;DDL&lt;/span&gt;           &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rule&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Statements&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.*&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Statements&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rule&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Ignore&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Table&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Table&lt;/span&gt;         &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rule&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TableFlag&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TableName&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Ignore&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Arguments&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tbl&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TableName&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rule&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;capture&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(!&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;EndName&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ANY&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).+&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mkString&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;EndName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Arguments&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rule&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Arg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.*.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;separatedBy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Ignore&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Arg&lt;/span&gt;           &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rule&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;columnStart&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;capture&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(!&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;Space&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ANY&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).+&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&amp;gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mkString&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Space&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TableFlag&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rule&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;CreateTable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Space&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;EndName&lt;/span&gt;       &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rule&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Space&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;(&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Ignore&lt;/span&gt;        &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rule&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(!&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;CreateTable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Space&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Space&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ANY&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).+&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;It’s a fair bit uglier than a real BNF grammar definition, but given that we need to define functions &amp;amp; chain calls together Parboiled2 is a great step in the right direction. So what’s going on here? Lets break this down line by line.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;DdlParser&lt;/code&gt; case class extends &lt;code&gt;Parser&lt;/code&gt; which is the base class of all Parboiled2 parsers &amp;amp; requires a &lt;code&gt;ParserInput&lt;/code&gt; val named input. Since this is a case class, you probably inferred that each time a document is parsed a new parser is created. Thankfully these are lightweight objects.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;DDL&lt;/code&gt; is the top level rule just like in the grammar itself. The &lt;code&gt;rule&lt;/code&gt; macro is called with &lt;code&gt;Statements.*&lt;/code&gt; in its scope. This is a dense line, but under the covers it’s generating a parser rule that matches on &lt;em&gt;0-n&lt;/em&gt; &lt;code&gt;Statements&lt;/code&gt; as a sequence. &lt;code&gt;Statements&lt;/code&gt; in turn are just an ignored range and a &lt;code&gt;Statement&lt;/code&gt; (that’s what the &lt;code&gt;~&lt;/code&gt; combinator means). The parser continues walking down the DDL parse tree passing over elements (we haven’t added anything to the stack yet) until it reaches the &lt;code&gt;TableName&lt;/code&gt; rule in &lt;code&gt;Table&lt;/code&gt; where you’ll notice &lt;code&gt;capture(!EndName ~ ANY).+&lt;/code&gt;. This statement pushes characters onto the stack until it reaches &lt;code&gt;EndName&lt;/code&gt;, which triggers a parser failure &amp;amp; backtracking to its parent rule, &lt;code&gt;TableName&lt;/code&gt;. Once one or more characters have been pushed, its time to turn them into a string using Parboiled2’s &lt;code&gt;~&amp;gt;&lt;/code&gt; action combinator, which is a function of the prior rule’s result/side effects (i.e. elements pushed onto stack). In the &lt;code&gt;DdlParser&lt;/code&gt; we want the full table name so it’s simply turning the sequence of characters pushed into a string. &lt;/p&gt;
+
+&lt;p&gt;After a table name has been matched &amp;amp; pushed onto the stack as a string, the parser will begin processing &lt;code&gt;Arguments&lt;/code&gt;, or column names in this example. Each &lt;code&gt;Arg&lt;/code&gt; is preceded by some separator that’s been passed into the parser at construction time. In our case this is two spaces, “  “. So, just like we did with the table name, the parser will push column name characters onto the stack until it reaches a terminating space then transform those characters into a string &amp;amp; push it back onto the stack. Once the arguments have been parsed &amp;amp; pushed, the stack should look like this: &lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;TOP&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;OF&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;STACK&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;nc&quot;&gt;Vector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;label&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;location&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;Next&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Cell&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;tables&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Parboiled2 has a great feature where when data fits a case class, as this does &lt;code&gt;tbl&lt;/code&gt;, you can use an action rule to transform the stack elements directly into the case class, which is what’s happening in &lt;code&gt;Table&lt;/code&gt;! Once the parser has walked through all the provided characters it returns a &lt;code&gt;Try[T]&lt;/code&gt; with your expected result or a &lt;code&gt;ParserError&lt;/code&gt; indicating where you went wrong. &lt;/p&gt;
+
+&lt;p&gt;Hopefully after reading this &amp;amp; playing around with the code you’re as excited about what Parboiled2 can do! (I’m not going to show you how to test your serialization code)&lt;/p&gt;
+
+  &lt;p&gt;&lt;a href=&quot;/programming/parsing-sql-ddl-schema/&quot;&gt;Parsing SQL DDL Schema With Parboiled2&lt;/a&gt; was originally published by Chris Coffey at &lt;a href=&quot;&quot;&gt;Fun With Code&lt;/a&gt; on February 28, 2015.&lt;/p&gt;</content>
+</entry>
+
+
+<entry>
+  <title type="html"><![CDATA[Learning Category Theory]]></title>
  <link rel="alternate" type="text/html" href="/math/category-theory-for-most-of-us/" />
   <id>/math/category-theory-for-most-of-us</id>
   <published>2015-02-01T14:39:45-05:00</published>
@@ -24,9 +127,80 @@
     <uri></uri>
     <email>Christopher.m.Coffey@gmail.com</email>
   </author>
-  <content type="html">
+  <content type="html">&lt;p&gt;Eugene Yakota’s &lt;a href=&quot;http://eed3si9n.com/learning-scalaz/&quot;&gt;Learning ScalaZ&lt;/a&gt; series of articles are some of the best resources available for folks starting to learn functional programming. I loved following his path through the ScalaZ library &amp;amp; Learn You a Haskell For Great Good, and it was one of the most valuable bits of reading I’ve done. However, I’ve been spending more and more time playing around with Haskell and it seems like in order to really understand what’s going I should learn the theory behind it all. Category Theory to be exact.&lt;/p&gt;
 
-  &lt;p&gt;&lt;a href=&quot;/math/category-theory-for-most-of-us/&quot;&gt;Category Theory for Most of Us&lt;/a&gt; was originally published by Chris Coffey at &lt;a href=&quot;&quot;&gt;Fun With Code&lt;/a&gt; on February 01, 2015.&lt;/p&gt;</content>
+&lt;h2 id=&quot;what-is-category-theory&quot;&gt;What Is Category Theory?&lt;/h2&gt;
+
+&lt;p&gt;Stanford defines Category Theory as:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;… it is the general mathematical theory of structures and systems of structures.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Wikipedia prefers:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Category theory is a mathematical structure … What makes category theory different from the study of other structures is that in a sense the concept of category is an abstraction of a kind of mathematics. (This cannot be made into a precise mathematical definition!) This makes category theory unusually self-referential and capable of treating many of the same questions that mathematical logic treats. In particular, it provides a language that unifies many concepts in different parts of math.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;There are dozens of other slight variations on this theme, but I think that’s because Category Theory is still a fairly new branch of mathematics. At it’s heart it’s the study of the relationship between different areas of math.&lt;/p&gt;
+
+&lt;p&gt;But what is a category?&lt;/p&gt;
+
+&lt;p&gt;Categories have two main components:
+- Objects
+   - Objects are points/elements within the category
+- Arrows
+   - Arrows are a directed connection between objects in a given category.&lt;/p&gt;
+
+&lt;figure align=&quot;center&quot;&gt;
+&lt;img src=&quot;/images/Scala Category.svg&quot; alt=&quot;Categories are Awesome!&quot; /&gt;
+&lt;figcaption&gt; The Category of Scala Types &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;Imagine we have three types, &lt;em&gt;A, B, C&lt;/em&gt; within a Scala program, and the ability to map from &lt;em&gt;C → B&lt;/em&gt;. This could be something as simple as this:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;k&quot;&gt;object&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Test&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;C&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Int&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;BigDecimal&lt;/span&gt; 
+	&lt;span class=&quot;k&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;String&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c_→&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;_b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;C&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;BigDecimal&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b_→&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;_a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;toString&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Obviously the actual category of Scala types is infinite, but in this simple example you can see category &lt;em&gt;T&lt;/em&gt; contains a few objects and some arrows between them. Those arrows are each functions from object &lt;em&gt;O₀&lt;/em&gt; to &lt;em&gt;O₁&lt;/em&gt; and &lt;em&gt;O₁&lt;/em&gt; to &lt;em&gt;O₂&lt;/em&gt;, and as functions this means we can compose them together. Composition is awesome, not in the least because it allows us to add another implied arrow from &lt;em&gt;C&lt;/em&gt; → &lt;em&gt;A&lt;/em&gt; by composing &lt;em&gt;C → B → A&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;So now our category actually looks like this:&lt;/p&gt;
+
+&lt;figure align=&quot;center&quot;&gt;
+&lt;img src=&quot;/images/Scala Category implied arrow.svg&quot; alt=&quot;OOOhh, arrows can compose. This looks interesting!&quot; /&gt;
+&lt;figcaption&gt;Composing Arrows&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;Because arrows are also functions and we can compose this, you can legally write  b&lt;em&gt;→_a compose  c&lt;/em&gt;→_b {% raw %}, effectively creating a new function from &lt;em&gt;C → A&lt;/em&gt;! Extending your code without actually having to write any new code is pretty awesome, and we know this is safe because the arrows in category T prove it (and the compiler + type system prove it in Scala).&lt;/p&gt;
+
+&lt;h2 id=&quot;arrow-composition-laws&quot;&gt;Arrow Composition Laws&lt;/h2&gt;
+
+&lt;p&gt;Composing arrows follows the same basic laws as composing functions. That is to say, arrows are associative and have an identity.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Associativity
+    &lt;ul&gt;
+      &lt;li&gt;Arrows composed together do not need to parenthesis. Ordering of arrows remains important, but where the parenthesis are placed doesn’t matter.&lt;/li&gt;
+      &lt;li&gt;&lt;em&gt;a • b • c = a •(b * c) = (a • b) • c&lt;/em&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Identity
+    &lt;ul&gt;
+      &lt;li&gt;All objects in a category have a self-referential arrow. This arrow provides a unit/zero/identity for elements in the category, just like 0 is the identity for addition/subtraction or 1 across multiplication/division. In a category, the identity arrow is an important unit of composition because it is both always present on any given object &amp;amp; provides a valid starting point when performing composition.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;These composition laws allow us to work with Categories independently of any understanding about what the objects actually are. Instead, you’re able to reason about how objects within a category relate to each other via their arrows. &lt;/p&gt;
+
+  &lt;p&gt;&lt;a href=&quot;/math/category-theory-for-most-of-us/&quot;&gt;Learning Category Theory&lt;/a&gt; was originally published by Chris Coffey at &lt;a href=&quot;&quot;&gt;Fun With Code&lt;/a&gt; on February 01, 2015.&lt;/p&gt;</content>
 </entry>
 
 
